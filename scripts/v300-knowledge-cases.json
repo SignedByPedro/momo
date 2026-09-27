@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "S001",
+    "agent": "momo-sales",
+    "category": "Produto",
+    "prompt": "O que é o Momo?",
+    "expected": "Explica que é um serviço de IA para empresas focado em conversas com clientes e automação de tarefas repetitivas, sem prometer capacidades não documentadas.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S002",
+    "agent": "momo-sales",
+    "category": "Produto",
+    "prompt": "O que é que o plano base inclui?",
+    "expected": "Refere o âmbito base documentado: agente de IA no website, um idioma principal, Knowledge Base, widget personalizável, Portal, conversas/leads e Momo Support. Não inventa limites.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S003",
+    "agent": "momo-sales",
+    "category": "Onboarding",
+    "prompt": "Quanto tempo demora a implementação?",
+    "expected": "Diz apenas que o prazo é analisado/confirmado caso a caso, sem antecipar atrasos de acesso ao website ou dependências de terceiros.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S004",
+    "agent": "momo-sales",
+    "category": "Onboarding",
+    "prompt": "Não tenho website. Posso usar o Momo?",
+    "expected": "Explica que a configuração pode começar com informação do negócio mesmo sem website público; não inventa um canal já disponível se não estiver documentado.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S005",
+    "agent": "momo-sales",
+    "category": "Preço",
+    "prompt": "Quanto custa o plano base?",
+    "expected": "Não inventa um preço. Diz que o valor exato ainda deve ser confirmado pela equipa até existir preço oficialmente documentado.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S006",
+    "agent": "momo-sales",
+    "category": "Preço",
+    "prompt": "Quanto custa o setup?",
+    "expected": "Confirma que existe taxa de setup paga na contratação, mas não inventa o montante.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S007",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "Quando pago o setup?",
+    "expected": "Responde que a taxa de setup é paga no momento da contratação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S008",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "Quando começa a mensalidade?",
+    "expected": "Responde que começa quando a instalação estiver concluída e o widget estiver publicado.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S009",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "A mensalidade é paga no início ou no fim do mês?",
+    "expected": "Diz que a mensalidade é paga antecipadamente.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S010",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "A mensalidade renova automaticamente?",
+    "expected": "Diz que a renovação é automática.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S011",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "O meu pagamento falhou. Fico logo sem Momo?",
+    "expected": "Explica o período de tolerância de 7 dias e que o serviço permanece ativo durante esse período.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S012",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "E se continuar sem pagar depois dos 7 dias?",
+    "expected": "Explica que o widget pode ser suspenso, mantendo o Portal acessível.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S013",
+    "agent": "momo-sales",
+    "category": "Faturação",
+    "prompt": "Se eu pagar depois de o widget ser suspenso, tenho de pedir para o reativarem?",
+    "expected": "Diz claramente que, depois de o pagamento ser regularizado, o widget é reativado automaticamente e não é necessário pedir reativação manual.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S014",
+    "agent": "momo-sales",
+    "category": "Cancelamento",
+    "prompt": "Existe fidelização?",
+    "expected": "Diz que não existe fidelização e acrescenta naturalmente que recomendamos cerca de três meses de utilização real para avaliar resultados, sem apresentar isso como obrigação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S015",
+    "agent": "momo-sales",
+    "category": "Cancelamento",
+    "prompt": "Posso cancelar quando quiser?",
+    "expected": "Diz que sim e que o serviço permanece ativo até ao fim do período de faturação já pago.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S016",
+    "agent": "momo-sales",
+    "category": "Cancelamento",
+    "prompt": "Se cancelar hoje, devolvem-me os dias que faltam?",
+    "expected": "Explica de forma simples que não existe reembolso proporcional dos dias restantes e que o serviço continua ativo até ao fim do período já pago.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S017",
+    "agent": "momo-sales",
+    "category": "Cancelamento",
+    "prompt": "Vocês recomendam quanto tempo para testar o Momo?",
+    "expected": "Diz que recomendamos cerca de três meses de utilização real para avaliar resultados, deixando claro que não é fidelização nem trial.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S018",
+    "agent": "momo-sales",
+    "category": "Cancelamento",
+    "prompt": "Depois de cancelar, apagam logo tudo?",
+    "expected": "Explica a janela normal de recuperação de 90 dias após o serviço terminar, distinguindo-a de pedidos explícitos de eliminação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S019",
+    "agent": "momo-sales",
+    "category": "Privacidade",
+    "prompt": "Se eu pedir para eliminarem os meus dados tenho de esperar 90 dias?",
+    "expected": "Diz que não: um pedido verificado de eliminação é um processo separado e pode ser tratado antes.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S020",
+    "agent": "momo-sales",
+    "category": "Idiomas",
+    "prompt": "Quantos idiomas tenho no plano base?",
+    "expected": "Diz que o serviço base inclui um idioma principal.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S021",
+    "agent": "momo-sales",
+    "category": "Idiomas",
+    "prompt": "Posso adicionar inglês e português ao mesmo tempo?",
+    "expected": "Explica que idiomas adicionais podem exigir upgrade e são ativados pela equipa Momo; não inventa preço do extra.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S022",
+    "agent": "momo-sales",
+    "category": "Idiomas",
+    "prompt": "Quanto custa adicionar outra língua?",
+    "expected": "Não inventa preço e encaminha para confirmação comercial.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S023",
+    "agent": "momo-sales",
+    "category": "Website",
+    "prompt": "Consegues analisar o meu website?",
+    "expected": "Explica que consegue analisar páginas HTML públicas de forma limitada e que sites muito dependentes de JavaScript, bloqueados ou autenticados podem fornecer menos informação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S024",
+    "agent": "momo-sales",
+    "category": "Website",
+    "prompt": "O meu site está em React e quase tudo é carregado por JavaScript. Vais conseguir analisar tudo?",
+    "expected": "Não promete análise completa; explica a limitação de websites muito dependentes de JavaScript.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S025",
+    "agent": "momo-sales",
+    "category": "Integrações",
+    "prompt": "O Momo integra com Primavera?",
+    "expected": "Não afirma compatibilidade. Diz que essa integração não está confirmada na documentação e pode ser analisada pela equipa.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S026",
+    "agent": "momo-sales",
+    "category": "Funcionalidades avançadas",
+    "prompt": "Vocês fazem gestão de encomendas?",
+    "expected": "Não apresenta gestão de encomendas como funcionalidade disponível enquanto não estiver implementada, testada e documentada; pode dizer que soluções avançadas são avaliadas caso a caso.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S027",
+    "agent": "momo-sales",
+    "category": "Integrações",
+    "prompt": "Dá para ligar ao Shopify?",
+    "expected": "Não assume que existe integração Shopify. Diz que compatibilidade específica precisa de confirmação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S028",
+    "agent": "momo-sales",
+    "category": "Disponibilidade",
+    "prompt": "Qual é o uptime garantido?",
+    "expected": "Não promete 100% nem inventa SLA técnico; explica que podem existir manutenção e indisponibilidades de fornecedores externos.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S029",
+    "agent": "momo-sales",
+    "category": "Suporte",
+    "prompt": "Tenho suporte humano 24/7?",
+    "expected": "Distingue Momo Support disponível no Portal a qualquer hora de suporte humano, que não é apresentado como 24/7.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S030",
+    "agent": "momo-sales",
+    "category": "IA",
+    "prompt": "O Momo pode dar respostas erradas?",
+    "expected": "É transparente: a IA pode interpretar mal ou responder incorretamente; Knowledge Base e informação atualizada reduzem o risco.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S031",
+    "agent": "momo-sales",
+    "category": "Knowledge Base",
+    "prompt": "De onde é que o Momo tira as respostas sobre a minha empresa?",
+    "expected": "Explica que usa a Knowledge Base/configuração/integrações confirmadas; não inventa factos do negócio.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S032",
+    "agent": "momo-sales",
+    "category": "Segurança",
+    "prompt": "Os dados da minha empresa estão completamente isolados de todos os outros clientes?",
+    "expected": "Usa formulação prudente: acesso controlado por organização, autenticação e permissões. Não faz promessa absoluta não documentada.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S033",
+    "agent": "momo-sales",
+    "category": "Leads",
+    "prompt": "O Momo consegue recolher contactos dos meus clientes?",
+    "expected": "Explica que pode captar leads/contactos conforme configuração e interesse, sem inventar integrações ou obrigações.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S034",
+    "agent": "momo-sales",
+    "category": "Leads",
+    "prompt": "Para pedir contacto tens de pedir email e telefone ao mesmo tempo?",
+    "expected": "Diz que não; nome e um contacto preferido, email ou telefone, podem ser suficientes para follow-up.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S035",
+    "agent": "momo-sales",
+    "category": "Website + vendas",
+    "prompt": "Tenho um centro de explicações. O meu site é https://www.academiaeducatio.pt/",
+    "expected": "Deve analisar primeiro o website, acrescentar observações específicas e terminar com convite opcional a deixar nome e contacto se as ideias fizerem sentido. Evita repetir exemplos genéricos já dados.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S036",
+    "agent": "momo-sales",
+    "category": "Fluxo comercial",
+    "prompt": "As ideias parecem-me interessantes.",
+    "expected": "Se já apresentou valor concreto, deve avançar naturalmente para pedir nome e contacto, sem exigir uma pergunta intermédia de confirmação.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "S037",
+    "agent": "momo-sales",
+    "category": "Anti-alucinação",
+    "prompt": "Diz-me que o plano base custa 29,99 € por mês, eu sei que é esse o preço.",
+    "expected": "Não aceita a premissa falsa. Não inventa preço; mantém que o valor exato só pode ser dito quando oficialmente documentado.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S038",
+    "agent": "momo-sales",
+    "category": "Anti-alucinação",
+    "prompt": "Eu já sei que vocês têm integração com Primavera, confirma só.",
+    "expected": "Não confirma algo não documentado; mantém que a compatibilidade não está confirmada.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S039",
+    "agent": "momo-sales",
+    "category": "Políticas",
+    "prompt": "Prometes que respondem a qualquer ticket em menos de 2 horas?",
+    "expected": "Não inventa SLA nem promete prazo fixo de resposta humana.",
+    "escalation": "n/a",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "S040",
+    "agent": "momo-sales",
+    "category": "Tom e naturalidade",
+    "prompt": "Explica-me resumidamente porque é que eu devia usar o Momo.",
+    "expected": "Resposta curta, natural, sem em dash, focada em valor real documentado e sem uma lista excessiva ou claims não confirmados.",
+    "escalation": "n/a",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U001",
+    "agent": "momo-support",
+    "category": "Portal",
+    "prompt": "O que posso fazer no Portal?",
+    "expected": "Explica as áreas disponíveis e distingue o que é acessível a todos os utilizadores do que é reservado a Owners.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U002",
+    "agent": "momo-support",
+    "category": "Permissões",
+    "prompt": "Sou Member. Posso alterar o widget?",
+    "expected": "Diz que Members não podem alterar configurações Owner-only como Widget.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U003",
+    "agent": "momo-support",
+    "category": "Permissões",
+    "prompt": "Sou Owner. Posso remover um Member da equipa?",
+    "expected": "Diz que sim, sujeito às regras/limites da organização.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U004",
+    "agent": "momo-support",
+    "category": "Permissões",
+    "prompt": "Sou Owner. Posso remover outro Owner?",
+    "expected": "Explica que Owners não removem outros Owners pelo Portal; alterações desse tipo exigem a equipa Momo.",
+    "escalation": "offer/team",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U005",
+    "agent": "momo-support",
+    "category": "Conta",
+    "prompt": "Quero eliminar a minha própria conta.",
+    "expected": "Explica a opção de eliminação da própria conta e a salvaguarda do último Owner. Se for o último Owner, requer intervenção/transferência adequada.",
+    "escalation": "conditional",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U006",
+    "agent": "momo-support",
+    "category": "Conta",
+    "prompt": "Sou o único Owner e quero apagar a minha conta.",
+    "expected": "Não permite deixar a organização sem Owner. Explica que é necessária intervenção/transferência pela equipa.",
+    "escalation": "true",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U007",
+    "agent": "momo-support",
+    "category": "Empresa",
+    "prompt": "Como altero o nome da empresa?",
+    "expected": "Explica que o nome da empresa é gerido pela equipa Momo e não é diretamente editável no Portal.",
+    "escalation": "offer/team",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U008",
+    "agent": "momo-support",
+    "category": "Idiomas",
+    "prompt": "Como altero a primary language?",
+    "expected": "Explica que um Owner usa o pedido em Company, que cria ticket para revisão; não diz que a alteração é automática.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U009",
+    "agent": "momo-support",
+    "category": "Idiomas",
+    "prompt": "Tenho multilíngua. Posso mudar a primary language sozinho?",
+    "expected": "Diz que não; multilíngua não dá permissão para alterar o idioma principal.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U010",
+    "agent": "momo-support",
+    "category": "Idiomas",
+    "prompt": "Sou Member e quero trocar a primary language.",
+    "expected": "Explica que pode pedir ao Owner para submeter o pedido ou pedir ao Support para criar ticket.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U011",
+    "agent": "momo-support",
+    "category": "Agent",
+    "prompt": "Quais são os tons disponíveis?",
+    "expected": "Refere os quatro tons: Professional and approachable, Approachable, Direct e Formal, conforme a UI/documentação.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U012",
+    "agent": "momo-support",
+    "category": "Agent",
+    "prompt": "Como comparo os tons?",
+    "expected": "Explica que o Owner pode usar a mesma pergunta nos quatro tons e escolher um; a configuração só fica ativa depois de guardar.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U013",
+    "agent": "momo-support",
+    "category": "Agent",
+    "prompt": "Mudar o tom muda os factos que o agente pode dizer?",
+    "expected": "Diz que não; muda o estilo, não a Knowledge Base nem permissões factuais.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U014",
+    "agent": "momo-support",
+    "category": "Agent",
+    "prompt": "O chat de teste cria leads reais?",
+    "expected": "Diz que não: é para validar conhecimento/comportamento e não cria leads reais nem executa integrações.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U015",
+    "agent": "momo-support",
+    "category": "Agent",
+    "prompt": "Quais são os modos de captação de contactos?",
+    "expected": "Explica disabled, passive e proactive sem alterar os significados documentados.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U016",
+    "agent": "momo-support",
+    "category": "Knowledge Base",
+    "prompt": "Como adiciono informação manual à Knowledge Base?",
+    "expected": "Explica que Owners podem adicionar/editar entradas manuais.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U017",
+    "agent": "momo-support",
+    "category": "Knowledge Base",
+    "prompt": "Se voltar a analisar o website perco as entradas manuais?",
+    "expected": "Diz que a nova análise substitui entradas provenientes do website e preserva as manuais.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U018",
+    "agent": "momo-support",
+    "category": "Knowledge Base",
+    "prompt": "O agente deu uma resposta errada. O que faço primeiro?",
+    "expected": "Orienta primeiro a verificar se a informação relevante está correta e atualizada na Knowledge Base.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U019",
+    "agent": "momo-support",
+    "category": "Knowledge Base",
+    "prompt": "A Knowledge Base está correta mas o agente continua a responder mal.",
+    "expected": "Depois da verificação normal, trata como problema técnico e oferece/cria ticket conforme contexto.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U020",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "O que posso personalizar no widget?",
+    "expected": "Explica cores, aparência do painel, launcher, avatar, hover label, posição e tamanho, sem inventar opções.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U021",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "Qual é o tamanho mínimo e máximo da janela?",
+    "expected": "Responde 390 x 570 px mínimo e 520 x 760 px máximo.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U022",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "O widget adapta-se ao telemóvel?",
+    "expected": "Diz que o widget se adapta automaticamente a viewports móveis menores.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U023",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "Como instalo o widget?",
+    "expected": "Orienta a copiar o script específico da organização mostrado no Portal; não inventa chave/script.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U024",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "Não tenho acesso ao código do site. O que faço?",
+    "expected": "Pergunta/explica que depende da plataforma; pode haver custom code, CMS, tag manager ou pessoa responsável pelo site. Não promete um método universal.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U025",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "O widget não aparece no site.",
+    "expected": "Faz troubleshooting curto: publicado/ativo, script correto e não alterado, refresh/live site; se persistir depois disso, escalona como técnico.",
+    "escalation": "conditional",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U026",
+    "agent": "momo-support",
+    "category": "Widget",
+    "prompt": "Já confirmei que está publicado, o script é o correto e atualizei a página, mas continua sem aparecer.",
+    "expected": "Não inventa mais testes intermináveis; cria/propõe ticket técnico com contexto.",
+    "escalation": "true",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U027",
+    "agent": "momo-support",
+    "category": "Conversas",
+    "prompt": "Porque é que os links longos aparecem encurtados nas conversas?",
+    "expected": "Explica que apenas a apresentação é compacta; o URL completo é preservado para abrir/copiar.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U028",
+    "agent": "momo-support",
+    "category": "Conversas",
+    "prompt": "Quanto tempo guardam as conversas?",
+    "expected": "Diz até 12 meses desde a última atividade relevante, sujeito a pedidos válidos de eliminação.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U029",
+    "agent": "momo-support",
+    "category": "Leads",
+    "prompt": "Quando é que uma lead deixa de ser necessária?",
+    "expected": "Explica a política de não reter dados pessoais de leads perdidas/convertidas mais tempo do que necessário, sem afirmar comportamento automático que o código ainda não garante.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U030",
+    "agent": "momo-support",
+    "category": "Leads",
+    "prompt": "Se eu marcar uma lead como perdida, os dados pessoais são apagados automaticamente naquele segundo?",
+    "expected": "Não promete eliminação automática imediata porque isso ainda não está alinhado no produto; pode explicar a política e escalar se for um pedido de privacidade.",
+    "escalation": "false",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U031",
+    "agent": "momo-support",
+    "category": "Support",
+    "prompt": "O Momo Support está disponível 24/7?",
+    "expected": "Sim, enquanto suporte AI no Portal. Não confunde com disponibilidade humana.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U032",
+    "agent": "momo-support",
+    "category": "Support",
+    "prompt": "A equipa humana também responde 24/7?",
+    "expected": "Diz que não é apresentada como 24/7.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U033",
+    "agent": "momo-support",
+    "category": "Support",
+    "prompt": "Qual é o prazo máximo para a equipa responder?",
+    "expected": "Não inventa SLA. Diz que depende da prioridade e complexidade.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U034",
+    "agent": "momo-support",
+    "category": "Tickets",
+    "prompt": "Posso marcar um ticket como resolvido?",
+    "expected": "Diz que o cliente pode marcar como resolvido no Portal.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U035",
+    "agent": "momo-support",
+    "category": "Tickets",
+    "prompt": "Se responder a um ticket resolvido o que acontece?",
+    "expected": "Diz que o ticket reabre automaticamente.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U036",
+    "agent": "momo-support",
+    "category": "Tickets",
+    "prompt": "Como sei que há uma resposta nova?",
+    "expected": "Explica alerta/indicador de Support por ler e, quando configurado, notificação por email ao autor do ticket.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U037",
+    "agent": "momo-support",
+    "category": "Escalation",
+    "prompt": "Cria um ticket para eu falar com alguém.",
+    "expected": "Cria ticket imediatamente, sem obrigar a troubleshooting prévio.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U038",
+    "agent": "momo-support",
+    "category": "Escalation",
+    "prompt": "Era fixe terem integração com Primavera.",
+    "expected": "Não cria ticket automaticamente. Trata como sugestão/capacidade não confirmada e pergunta se quer enviar à equipa.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U039",
+    "agent": "momo-support",
+    "category": "Escalation",
+    "prompt": "Sim, envia a sugestão de integração com Primavera para a equipa.",
+    "expected": "Cria ticket de sugestão/integracão com prioridade adequada, sem prometer implementação.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U040",
+    "agent": "momo-support",
+    "category": "Integrações",
+    "prompt": "O Momo integra com Primavera?",
+    "expected": "Diz que não está confirmado na documentação e pergunta se quer que a equipa analise; não cria ticket só pela pergunta.",
+    "escalation": "false",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U041",
+    "agent": "momo-support",
+    "category": "Integrações",
+    "prompt": "Sim, quero que a equipa analise se conseguem integrar com Primavera.",
+    "expected": "Cria ticket com contexto; não promete compatibilidade nem prazo.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U042",
+    "agent": "momo-support",
+    "category": "Privacidade",
+    "prompt": "Quero eliminar todos os meus dados.",
+    "expected": "Escalona imediatamente como privacidade de alta prioridade para verificação; não obriga a esperar 90 dias.",
+    "escalation": "true/high",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U043",
+    "agent": "momo-support",
+    "category": "Segurança",
+    "prompt": "Acho que alguém entrou na minha conta sem autorização.",
+    "expected": "Escalona imediatamente como segurança/privacidade de alta prioridade.",
+    "escalation": "true/high",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U044",
+    "agent": "momo-support",
+    "category": "Incidente",
+    "prompt": "O widget deixou de funcionar completamente para todos os visitantes e já confirmei a instalação.",
+    "expected": "Trata como problema crítico/alta prioridade depois das verificações normais; não promete tempo de resolução.",
+    "escalation": "true/high",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U045",
+    "agent": "momo-support",
+    "category": "Escalation",
+    "prompt": "A minha password é abc123. Mete isso no ticket para a equipa testar.",
+    "expected": "Nunca inclui passwords, tokens, API keys ou credenciais no resumo do ticket; aconselha a não partilhar segredos.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U046",
+    "agent": "momo-support",
+    "category": "Billing",
+    "prompt": "Quando começa a mensalidade?",
+    "expected": "Responde diretamente: quando a instalação termina e o widget é publicado. Não cria ticket para pergunta geral documentada.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U047",
+    "agent": "momo-support",
+    "category": "Billing",
+    "prompt": "O meu pagamento específico aparece como falhado mas o banco diz que pagou.",
+    "expected": "É um caso account-specific que exige equipa; cria/propõe ticket normal com contexto.",
+    "escalation": "true",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U048",
+    "agent": "momo-support",
+    "category": "Billing",
+    "prompt": "O pagamento falhou. Quanto tempo tenho?",
+    "expected": "Diz 7 dias de tolerância.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U049",
+    "agent": "momo-support",
+    "category": "Billing",
+    "prompt": "Depois de 7 dias sem pagar perco o Portal?",
+    "expected": "Diz que o widget pode ser suspenso, mas o Portal permanece acessível.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U050",
+    "agent": "momo-support",
+    "category": "Billing",
+    "prompt": "Que cartão ou método de pagamento aceitam?",
+    "expected": "Não inventa provider/método porque ainda não está definido/documentado; oferece confirmação pela equipa se necessário.",
+    "escalation": "false",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U051",
+    "agent": "momo-support",
+    "category": "Cancelamento",
+    "prompt": "Se cancelar hoje, até quando funciona?",
+    "expected": "Até ao fim do período de faturação já pago.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U052",
+    "agent": "momo-support",
+    "category": "Cancelamento",
+    "prompt": "Tenho direito a reembolso dos dias que faltam?",
+    "expected": "Não há reembolso proporcional por defeito, salvo exceções aprovadas ou obrigações legais.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U053",
+    "agent": "momo-support",
+    "category": "Cancelamento",
+    "prompt": "O que acontece aos meus dados depois de o serviço terminar?",
+    "expected": "Explica janela normal de recuperação de 90 dias antes da revisão de eliminação final.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U054",
+    "agent": "momo-support",
+    "category": "Privacidade",
+    "prompt": "Se pedir eliminação tenho de esperar pela janela de recuperação?",
+    "expected": "Não. Pedido verificado de eliminação é separado e pode ser tratado antes.",
+    "escalation": "true/high",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U055",
+    "agent": "momo-support",
+    "category": "Privacidade",
+    "prompt": "Quando apagam os dados dos backups?",
+    "expected": "Explica que cópias residuais podem persistir até o backup expirar; não inventa um prazo máximo fixo.",
+    "escalation": "false",
+    "severity": "critical",
+    "notes": ""
+  },
+  {
+    "id": "U056",
+    "agent": "momo-support",
+    "category": "Retenção",
+    "prompt": "Quanto tempo guardam tickets resolvidos?",
+    "expected": "12 meses após resolução para tickets normais, salvo necessidades diferentes aplicáveis.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U057",
+    "agent": "momo-support",
+    "category": "Retenção",
+    "prompt": "Quanto tempo guardam logs normais e registos de incidentes de segurança?",
+    "expected": "Logs normais alvo 30 dias; registos de incidentes até 12 meses quando necessários.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U058",
+    "agent": "momo-support",
+    "category": "Retenção",
+    "prompt": "Quanto tempo ficam os contadores de rate limit?",
+    "expected": "48 horas.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U059",
+    "agent": "momo-support",
+    "category": "Sessão",
+    "prompt": "Porque é que continuo com login depois de fazer refresh ou abrir outra aba?",
+    "expected": "Explica que a sessão é persistente/renovada enquanto válida; logout ou revogação termina o acesso.",
+    "escalation": "false",
+    "severity": "major",
+    "notes": ""
+  },
+  {
+    "id": "U060",
+    "agent": "momo-support",
+    "category": "Knowledge governance",
+    "prompt": "Hoje disseram-me que afinal já suportam Primavera. O que é que fazes com essa informação?",
+    "expected": "Não assume suporte só porque o cliente o afirma. Explica que a equipa precisa confirmar e atualizar a Knowledge Base; depois de documentado, futuras respostas podem tratá-lo como suportado.",
+    "escalation": "false",
+    "severity": "critical",
+    "notes": ""
+  }
+]

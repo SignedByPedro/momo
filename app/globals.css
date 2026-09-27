@@ -1,0 +1,1023 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --momo-orange-deep: #ff4300;
+  --momo-orange: #ff7a00;
+  --momo-orange-light: #ffbd59;
+  --momo-bg: #101010;
+  --momo-panel: #151515;
+  --momo-panel-soft: #202020;
+  --momo-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: transparent;
+}
+
+body {
+  color: #f7f7f7;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+/* Interactive controls should communicate clickability consistently across
+   the commercial site, admin and client portal. */
+button:not(:disabled),
+a[href],
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: rgba(255, 125, 24, 0.35);
+}
+
+.momo-page-ambient {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at calc(100% - 46px) calc(100% - 50px),
+    rgba(255, 122, 24, 0.095) 0%,
+    rgba(255, 104, 10, 0.055) 24%,
+    rgba(255, 86, 0, 0.022) 43%,
+    transparent 67%
+  );
+}
+
+@media (min-width: 640px) {
+  .momo-page-ambient {
+    background: radial-gradient(
+      circle at calc(100% - 58px) calc(100% - 58px),
+      rgba(255, 122, 24, 0.095) 0%,
+      rgba(255, 104, 10, 0.055) 24%,
+      rgba(255, 86, 0, 0.022) 43%,
+      transparent 67%
+    );
+  }
+}
+
+ .momo-launcher {
+  position: relative;
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 206, 116, 0.98) 0%, rgba(255, 206, 116, 0) 34%),
+    radial-gradient(circle at 86% 30%, rgba(255, 124, 0, 0.98) 0%, rgba(255, 124, 0, 0) 42%),
+    radial-gradient(circle at 42% 90%, rgba(255, 61, 0, 0.98) 0%, rgba(255, 61, 0, 0) 48%),
+    linear-gradient(135deg, var(--momo-orange-light), var(--momo-orange), var(--momo-orange-deep));
+  background-size: 180% 180%, 175% 175%, 185% 185%, 100% 100%;
+  background-position: 0% 0%, 100% 18%, 42% 100%, center;
+  animation: momo-liquid-surface 5.8s ease-in-out infinite;
+  box-shadow:
+    0 15px 55px rgba(255, 101, 5, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -8px 18px rgba(129, 38, 0, 0.14);
+  color: white;
+  cursor: pointer;
+  isolation: isolate;
+  transition:
+    transform 180ms ease,
+    filter 300ms ease,
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.momo-launcher::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  z-index: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 20deg,
+    rgba(255, 62, 0, 0.98) 0deg,
+    rgba(255, 62, 0, 0.98) 62deg,
+    rgba(255, 132, 0, 0.98) 126deg,
+    rgba(255, 195, 82, 0.98) 205deg,
+    rgba(255, 111, 0, 0.98) 278deg,
+    rgba(255, 62, 0, 0.98) 360deg
+  );
+  opacity: 0.94;
+  filter: blur(4px) saturate(1.24) contrast(1.06);
+  transform-origin: 50% 50%;
+  animation: momo-liquid-orbit 5.6s linear infinite;
+  transition:
+    filter 360ms ease,
+    opacity 360ms ease;
+}
+
+.momo-launcher::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 24% 18%, rgba(255, 248, 229, 0.46) 0 11%, transparent 31%),
+    radial-gradient(ellipse at 78% 76%, rgba(255, 54, 0, 0.34) 0 16%, transparent 42%),
+    radial-gradient(ellipse at 64% 28%, rgba(255, 189, 89, 0.3) 0 13%, transparent 38%);
+  transition:
+    opacity 320ms ease,
+    filter 320ms ease;
+}
+
+.momo-launcher:hover {
+  filter: brightness(1.16) saturate(1.12);
+  transform: translateY(-2px) scale(1.045);
+  border-color: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    0 18px 64px rgba(255, 126, 24, 0.48),
+    0 0 30px rgba(255, 178, 78, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.momo-launcher:hover::before {
+  opacity: 1;
+  filter: blur(4px) saturate(1.28) brightness(1.08);
+}
+
+.momo-launcher:hover::after {
+  opacity: 1;
+  filter: brightness(1.12);
+}
+
+.momo-launcher:active {
+  transform: translateY(0) scale(0.955);
+  transition-duration: 90ms;
+}
+
+.momo-launcher:focus-visible {
+  outline: 3px solid rgba(255, 171, 76, 0.28);
+  outline-offset: 4px;
+}
+
+.momo-launcher.is-open {
+  filter: brightness(1.07) saturate(1.06);
+  box-shadow:
+    0 15px 55px rgba(255, 101, 5, 0.3),
+    0 0 0 4px rgba(255, 125, 24, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.momo-launcher-glow {
+  position: absolute;
+  z-index: 2;
+  inset: 7px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.2), transparent 34%),
+    rgba(255, 255, 255, 0.035);
+  filter: blur(6px);
+  animation: momo-glow-drift 3.8s ease-in-out infinite alternate;
+}
+
+.momo-launcher-highlight {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  left: 12px;
+  width: 23px;
+  height: 10px;
+  transform: rotate(-18deg);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  filter: blur(1px);
+  opacity: 0.68;
+}
+
+.momo-launcher-icon {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 1px 4px rgba(97, 31, 0, 0.2));
+  transition: transform 180ms ease;
+}
+
+.momo-launcher:hover .momo-launcher-icon {
+  transform: scale(1.04);
+}
+
+.momo-avatar {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(145deg, #ffad45 0%, #ff7d18 48%, #ff5b00 100%);
+  color: white;
+  box-shadow:
+    0 7px 20px rgba(255, 96, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.momo-avatar::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.3), transparent 32%);
+}
+
+.momo-chat-panel {
+  transform-origin: calc(100% - 28px) 100%;
+  animation: momo-panel-in 220ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+
+.momo-online-dot {
+  background: #ff8a20;
+  box-shadow: 0 0 10px rgba(255, 125, 24, 0.75);
+}
+
+.momo-user-message {
+  background: linear-gradient(135deg, #ffae47 0%, #ff851f 55%, #ff6810 100%);
+  box-shadow: 0 7px 20px rgba(255, 97, 0, 0.09);
+}
+
+.momo-quick-action {
+  border: 1px solid rgba(255, 132, 38, 0.22);
+  background: linear-gradient(180deg, rgba(255, 132, 38, 0.085), rgba(255, 94, 0, 0.04));
+  color: #ffa35d;
+}
+
+.momo-quick-action:hover {
+  border-color: rgba(255, 157, 74, 0.46);
+  background: linear-gradient(180deg, rgba(255, 153, 67, 0.14), rgba(255, 104, 12, 0.075));
+  color: #ffb373;
+  transform: translateY(-1px);
+}
+
+.momo-input-shell {
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.momo-input-shell:focus-within {
+  border-color: rgba(255, 132, 38, 0.38);
+  background: rgba(255, 255, 255, 0.058);
+  box-shadow:
+    0 0 0 3px rgba(255, 122, 24, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.momo-send-button {
+  background: linear-gradient(135deg, #ffad45, #ff7515);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.momo-send-button:not(:disabled):hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.momo-send-button:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.momo-typing-dot {
+  animation: momo-typing 1.05s ease-in-out infinite;
+}
+
+.momo-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.momo-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.momo-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.momo-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@keyframes momo-liquid-surface {
+  0%,
+  100% {
+    background-position: 0% 0%, 100% 18%, 42% 100%, center;
+  }
+  25% {
+    background-position: 42% 8%, 68% 54%, 14% 72%, center;
+  }
+  50% {
+    background-position: 74% 34%, 90% 88%, 62% 58%, center;
+  }
+  75% {
+    background-position: 24% 70%, 54% 18%, 92% 82%, center;
+  }
+}
+
+@keyframes momo-liquid-orbit {
+  0% {
+    transform: rotate(0deg) scale(1.04) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1) translate3d(2%, -2%, 0);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05) translate3d(0, 3%, 0);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.1) translate3d(-2%, -1%, 0);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.04) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes momo-highlight-flow {
+  0%,
+  100% {
+    transform: translate3d(-7%, -5%, 0) rotate(-10deg) scale(1.02);
+    opacity: 0.82;
+  }
+  33% {
+    transform: translate3d(8%, 0%, 0) rotate(11deg) scale(1.12);
+    opacity: 1;
+  }
+  66% {
+    transform: translate3d(2%, 9%, 0) rotate(-4deg) scale(1.07);
+    opacity: 0.9;
+  }
+}
+
+@keyframes momo-highlight-orbit {
+  0%,
+  100% {
+    transform: translate3d(-3px, 0, 0) rotate(-18deg) scaleX(0.9);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translate3d(12px, 3px, 0) rotate(-8deg) scaleX(1.1);
+    opacity: 0.78;
+  }
+  58% {
+    transform: translate3d(15px, 18px, 0) rotate(14deg) scaleX(0.82);
+    opacity: 0.46;
+  }
+  82% {
+    transform: translate3d(0, 14px, 0) rotate(-28deg) scaleX(1);
+    opacity: 0.66;
+  }
+}
+
+@keyframes momo-breathe {
+  0%,
+  100% {
+    opacity: 0.76;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.045);
+  }
+}
+
+@keyframes momo-glow-drift {
+  0% {
+    transform: translate(-5px, -3px) scale(0.9);
+    opacity: 0.32;
+  }
+  50% {
+    transform: translate(4px, -1px) scale(1.08);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translate(2px, 5px) scale(1.02);
+    opacity: 0.76;
+  }
+}
+
+@keyframes momo-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes momo-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .momo-launcher,
+  .momo-launcher::before,
+  .momo-launcher::after,
+  .momo-launcher-glow,
+  .momo-launcher-highlight,
+  .momo-chat-panel,
+  .momo-typing-dot {
+    animation: none !important;
+  }
+
+  .momo-launcher,
+  .momo-launcher-icon,
+  .momo-quick-action,
+  .momo-send-button {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* External widget panel gets the same polished entrance as the native Momo chat.
+   The parent iframe snaps to its target size, so the panel animation is not
+   continuously reflowed/clipped while opening. */
+.client-widget-panel {
+  animation: momo-panel-in 220ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+}
+
+/* Keep the launcher cursor stable even when a custom image fills the button. */
+.client-widget-launcher,
+.client-widget-launcher * {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Client widget live preview / reusable launcher foundation */
+.client-widget-launcher {
+  --widget-primary: #ff7a18;
+  --widget-secondary: #ffb04a;
+  --widget-tertiary: #ff4d00;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--widget-secondary) 92%, white 8%) 0%, transparent 34%),
+    radial-gradient(circle at 86% 30%, var(--widget-primary) 0%, transparent 42%),
+    radial-gradient(circle at 42% 90%, var(--widget-tertiary) 0%, transparent 48%),
+    linear-gradient(135deg, var(--widget-secondary), var(--widget-primary), var(--widget-tertiary));
+  background-size: 180% 180%, 175% 175%, 185% 185%, 100% 100%;
+  background-position: 0% 0%, 100% 18%, 42% 100%, center;
+  animation: momo-liquid-surface 5.8s ease-in-out infinite;
+  box-shadow:
+    0 8px 20px color-mix(in srgb, var(--widget-primary) 24%, transparent),
+    0 0 14px color-mix(in srgb, var(--widget-secondary) 10%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -8px 18px rgba(30, 10, 0, 0.12);
+  cursor: pointer;
+  isolation: isolate;
+  transition:
+    transform 180ms ease,
+    filter 300ms ease,
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.client-widget-launcher::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  z-index: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 20deg,
+    var(--widget-tertiary) 0deg,
+    var(--widget-tertiary) 62deg,
+    var(--widget-primary) 126deg,
+    var(--widget-secondary) 205deg,
+    var(--widget-primary) 278deg,
+    var(--widget-tertiary) 360deg
+  );
+  opacity: 0.94;
+  filter: blur(4px) saturate(1.24) contrast(1.06);
+  transform-origin: 50% 50%;
+  animation: momo-liquid-orbit 5.6s linear infinite;
+}
+
+.client-widget-launcher::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 78% 76%, color-mix(in srgb, var(--widget-tertiary) 38%, transparent) 0 16%, transparent 42%),
+    radial-gradient(ellipse at 64% 28%, color-mix(in srgb, var(--widget-secondary) 32%, transparent) 0 13%, transparent 38%);
+  pointer-events: none;
+}
+
+.client-widget-launcher:hover {
+  filter: brightness(1.16) saturate(1.12);
+  transform: translateY(-2px) scale(1.045);
+  border-color: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--widget-primary) 32%, transparent),
+    0 0 18px color-mix(in srgb, var(--widget-secondary) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.client-widget-launcher:active {
+  transform: translateY(0) scale(0.955);
+  transition-duration: 90ms;
+}
+
+.client-widget-launcher-shine {
+  position: absolute;
+  z-index: 3;
+  top: 11%;
+  left: 19%;
+  width: 39%;
+  height: 17%;
+  transform: rotate(-18deg);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  filter: blur(1px);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+/* Optional full-image launcher. The uploaded image fills the circular button and disables the Momo liquid layers. */
+.client-widget-launcher.client-widget-launcher--image {
+  animation: none;
+  background: #111;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.24),
+    0 0 12px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.client-widget-launcher.client-widget-launcher--image::before,
+.client-widget-launcher.client-widget-launcher--image::after {
+  display: none;
+}
+
+.client-widget-launcher.client-widget-launcher--image:hover {
+  filter: brightness(1.08) saturate(1.03);
+  transform: translateY(-2px) scale(1.045);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    0 0 16px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+
+/* v2.30: feedback shared by every button in the site, Admin and Portal.
+   Transient pressed feedback also works for keyboard and Enter submission. */
+:is(button:not(:disabled), input[type="submit"]:not(:disabled),
+    input[type="button"]:not(:disabled), a[href][class*="rounded"],
+    [role="button"]:not([aria-disabled="true"])) {
+  -webkit-tap-highlight-color: rgba(255, 122, 24, 0.12);
+  transition-property: transform, filter, background-color, border-color, box-shadow;
+  transition-duration: 160ms;
+  transition-timing-function: ease;
+}
+
+:is(button:not(:disabled), input[type="submit"]:not(:disabled),
+    input[type="button"]:not(:disabled), a[href][class*="rounded"],
+    [role="button"]:not([aria-disabled="true"])):is(:active, [data-momo-pressed="true"]):not(.momo-launcher):not(.client-widget-launcher) {
+  transform: translateY(1px) scale(0.982);
+  filter: brightness(1.13);
+  outline: 2px solid rgba(255, 148, 68, 0.22);
+  outline-offset: 1px;
+}
+
+:is(button, input[type="submit"], input[type="button"],
+    a[href][class*="rounded"], [role="button"]):focus-visible {
+  outline: 2px solid rgba(255, 154, 77, 0.78);
+  outline-offset: 3px;
+}
+
+/* Every Server Action submit button uses React's real useFormStatus rather
+   than a timeout. Keep the label visible and show a small spinner beside it. */
+.momo-form-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.momo-form-submit[data-momo-pending="true"] {
+  cursor: progress;
+  filter: brightness(1.05);
+  opacity: 0.83;
+}
+
+.momo-button-spinner {
+  display: inline-block;
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: momo-submit-spin 0.75s linear infinite;
+}
+
+@keyframes momo-submit-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(button, input[type="submit"], input[type="button"],
+      a[href][class*="rounded"], [role="button"]) {
+    transition-duration: 0.01ms;
+  }
+  :is(button, input[type="submit"], input[type="button"],
+      a[href][class*="rounded"], [role="button"]):is(:active, [data-momo-pressed="true"]) {
+    transform: none;
+    filter: brightness(1.12);
+  }
+  .momo-button-spinner { animation: none; }
+}
+
+.momo-support-launcher-orb {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  cursor: inherit;
+  border-color: transparent;
+  box-shadow:
+    0 10px 30px rgba(255, 101, 5, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -7px 14px rgba(129, 38, 0, 0.12);
+}
+
+.momo-support-launcher-orb .momo-launcher-glow {
+  inset: 6px;
+}
+
+/* Momo Sales landing page v3.20 */
+.momo-sales-home {
+  position: relative;
+  min-height: 100svh;
+  overflow-x: hidden;
+  background: #030303;
+}
+
+.momo-sales-hero {
+  --momo-rounded-font: ui-rounded, "SF Pro Rounded", "Avenir Next Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 86% 84%, rgba(255, 91, 0, 0.085), transparent 30%),
+    radial-gradient(circle at 58% 16%, rgba(255, 255, 255, 0.018), transparent 28%),
+    #030303;
+}
+
+.momo-sales-widget-light {
+  position: absolute;
+  z-index: 1;
+  right: -20vw;
+  bottom: -22vh;
+  width: min(660px, 48vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 72% 72%,
+    rgba(255, 145, 48, 0.24) 0%,
+    rgba(255, 112, 20, 0.14) 16%,
+    rgba(255, 84, 0, 0.07) 34%,
+    rgba(255, 70, 0, 0.03) 48%,
+    transparent 64%
+  );
+  filter: blur(12px);
+}
+
+.momo-sales-topbar {
+  position: absolute;
+  z-index: 12;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: clamp(24px, 3.2vw, 44px) clamp(22px, 4.2vw, 72px);
+}
+
+.momo-sales-language {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(13, 13, 13, 0.55);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.momo-sales-language button {
+  min-width: 42px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.34);
+  font-family: var(--momo-rounded-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.momo-sales-language button:hover {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.momo-sales-language button.is-active {
+  background: rgba(255, 116, 20, 0.1);
+  color: #ff9a4f;
+  box-shadow: inset 0 0 0 1px rgba(255, 129, 32, 0.24);
+}
+
+.momo-sales-copy {
+  position: absolute;
+  z-index: 10;
+  top: 41%;
+  left: clamp(52%, 56vw, 60%);
+  width: min(610px, 37vw);
+  transform: translateY(-50%);
+}
+
+.momo-sales-eyebrow {
+  margin: 0 0 18px;
+  color: rgba(255, 153, 78, 0.68);
+  font-family: var(--momo-rounded-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.momo-sales-title {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.97);
+  font-family: var(--momo-rounded-font);
+  font-size: clamp(50px, 4.3vw, 79px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+  text-wrap: balance;
+}
+
+.momo-sales-title > span {
+  display: block;
+}
+
+.momo-sales-title-accent {
+  position: relative;
+  padding-bottom: 0.07em;
+  background-image:
+    radial-gradient(circle at 18% 18%, rgba(255, 250, 242, 0.95) 0%, rgba(255, 240, 214, 0.82) 8%, transparent 26%),
+    radial-gradient(circle at 74% 78%, rgba(255, 255, 255, 0.16) 0%, transparent 18%),
+    linear-gradient(112deg, #f4ddbf 0%, #f6cb8d 9%, #ffb049 18%, #ff9229 30%, #f06808 44%, #8e461d 58%, #1c1713 73%, #433933 87%, #f6dcc0 100%);
+  background-size: 120% 120%, 100% 100%, 100% 100%;
+  background-position: 0% 0%, center, center;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 118, 20, 0.07));
+}
+
+.momo-sales-description {
+  margin: clamp(22px, 2.1vw, 30px) 0 0;
+  max-width: 545px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+}
+
+.momo-sales-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 25px;
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.momo-sales-capabilities span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.momo-sales-capabilities i {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 122, 24, 0.68);
+  box-shadow: 0 0 9px rgba(255, 122, 24, 0.45);
+}
+
+.momo-sales-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 210px;
+  margin-top: 31px;
+  padding: 14px 20px 14px 22px;
+  border: 1px solid rgba(255, 181, 107, 0.32);
+  border-radius: 15px;
+  background: linear-gradient(110deg, #ff972f 0%, #ff7a18 52%, #ff5c17 100%);
+  color: #180d06;
+  font-family: var(--momo-rounded-font);
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow:
+    0 16px 45px rgba(255, 88, 7, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
+.momo-sales-cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow:
+    0 18px 52px rgba(255, 96, 11, 0.24),
+    0 0 24px rgba(255, 139, 44, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.momo-sales-cta:active {
+  transform: translateY(0) scale(0.985) !important;
+}
+
+.momo-sales-microcopy {
+  margin: 11px 0 0 4px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 11px;
+}
+
+@media (min-width: 900px) {
+  .momo-sales-home,
+  .momo-sales-hero {
+    height: 100svh;
+    min-height: 640px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .momo-sales-copy {
+    top: 40%;
+    left: 53%;
+    width: 43vw;
+  }
+
+  .momo-sales-title {
+    font-size: clamp(44px, 5.4vw, 64px);
+  }
+}
+
+@media (max-width: 899px) {
+  .momo-sales-home {
+    min-height: 100svh;
+  }
+
+  .momo-sales-hero {
+    min-height: max(720px, 100svh);
+    padding-bottom: 130px;
+  }
+
+  .momo-sales-topbar {
+    padding: 18px;
+  }
+
+  .momo-sales-language button {
+    min-width: 39px;
+    padding: 7px 9px;
+  }
+
+  .momo-sales-copy {
+    position: relative;
+    top: auto;
+    left: auto;
+    z-index: 10;
+    width: auto;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 106px 22px 0;
+    transform: none;
+  }
+
+  .momo-sales-title {
+    max-width: 520px;
+    font-size: clamp(40px, 11vw, 58px);
+  }
+
+  .momo-sales-description {
+    max-width: 520px;
+    font-size: 16px;
+  }
+
+  .momo-sales-widget-light {
+    right: -54vw;
+    bottom: -12vh;
+    width: 104vw;
+    opacity: 0.72;
+    background: radial-gradient(
+      circle at 76% 78%,
+      rgba(255, 145, 48, 0.2) 0%,
+      rgba(255, 104, 16, 0.12) 18%,
+      rgba(255, 78, 0, 0.05) 38%,
+      transparent 60%
+    );
+  }
+}
+
+@media (max-width: 520px) {
+  .momo-sales-hero {
+    min-height: 740px;
+  }
+
+  .momo-sales-copy {
+    padding-inline: 18px;
+  }
+
+  .momo-sales-eyebrow {
+    max-width: 280px;
+    margin-bottom: 13px;
+    font-size: 9px;
+  }
+
+  .momo-sales-title {
+    font-size: clamp(36px, 11vw, 48px);
+  }
+
+  .momo-sales-description {
+    margin-top: 19px;
+    line-height: 1.48;
+  }
+
+  .momo-sales-capabilities {
+    max-width: 345px;
+    margin-top: 20px;
+    gap: 7px 9px;
+    font-size: 10px;
+  }
+
+  .momo-sales-capabilities span {
+    gap: 9px;
+  }
+
+  .momo-sales-cta {
+    min-width: 0;
+    margin-top: 24px;
+    padding: 13px 17px 13px 18px;
+  }
+}

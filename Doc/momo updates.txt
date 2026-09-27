@@ -1,0 +1,31 @@
+O momo não está a ir direto a tentar criar uma lead, fizemos alguma alteração porque ele está a fazer muitas perguntas antes de pedir um contacto.
+
+Na opção de meter uma imagem que ocupa o widget inteiro podemos dar uma opção de ter uma imagem para o widget fechado e para depois de abrir a caixa de mensagens, a transição entre as duas imagens deve ser smooth.
+
+Uma questão, quando se elimina um cliente ou este deixa de pagar o link do widget fica automaticamnet cancelado? Porque a ideia é quando uma dessas coisas acontece o cliente deixa de ter acesso ao widget/nosso serviço. Também devia apagar a conta do portal de todos os users da empresa.
+
+Trtar dos preços dos diferentes planos, valor do setup, método/provider de pagamento, definir limites de utilizadores/uso, preços dos extras e dados formais da entidade Momo.
+
+O ícone dentro do widget devia ser ligeiramente maior tem pouca leitura.
+
+Implementar pagamentos diretamente no momo portal. ou estudar qual a melhor solução.
+
+Comprar o domínio para usar o resend sem limitações.
+
+Melhorar o design da homepage!
+
+Adicionar a informação que podemos criar o website do 0 caso o cliente não tenha. Mas não é a nossa prioridade.
+
+Criar um tester para os chatbots dos clientes, que faça por exemplo 500 perguntas para testar bem o knowldge e a capacidade de resposta da ai (fase setup).
+
+Talvez adicionar um support para o admin também.
+
+Adicionar a opção de adicionar ficheiros no chat.
+
+Ver os screenshots.
+
+Selo empresarial no ai para garantir segurança  da informação.
+
+Mais que uma vez no chatbot do cliente ele recomenda visitar o website para consultar uma informação, não faz sentido porque o user já esta no website.
+
+O knowledge está bugado nos clientes.
