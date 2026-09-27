@@ -1,9 +1,43 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import { requireAdmin } from "@/lib/admin/auth";
-import { tr } from "@/lib/i18n/ui";
-import { changeMyAdminPassword, updateAdminUiLanguage } from "./actions";
+import { dateLocale, tr } from "@/lib/i18n/ui";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { changeMyAdminPassword, inviteAdminOwner, updateAdminUiLanguage } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+type OwnerAccess = {
+  userId: string;
+  email: string;
+  invitedAt: string | null;
+  emailConfirmedAt: string | null;
+};
+
+async function getOwners(): Promise<OwnerAccess[]> {
+  const supabase = createSupabaseAdmin();
+  const { data: rows, error } = await supabase
+    .from("admin_users")
+    .select("user_id, email")
+    .eq("role", "owner")
+    .order("email", { ascending: true });
+
+  if (error) {
+    console.error("[admin-account] Could not load Owners:", error);
+    return [];
+  }
+
+  return Promise.all(
+    (rows ?? []).map(async (row) => {
+      const { data } = await supabase.auth.admin.getUserById(row.user_id);
+      return {
+        userId: row.user_id,
+        email: row.email ?? data.user?.email ?? "",
+        invitedAt: data.user?.invited_at ?? data.user?.created_at ?? null,
+        emailConfirmedAt: data.user?.email_confirmed_at ?? null,
+      };
+    }),
+  );
+}
 
 export default async function AdminAccountPage({
   searchParams,
@@ -13,6 +47,11 @@ export default async function AdminAccountPage({
   const admin = await requireAdmin();
   const query = await searchParams;
   const l = admin.language;
+  const owners = admin.role === "owner" ? await getOwners() : [];
+  const formatDate = (value: string | null) =>
+    value
+      ? new Intl.DateTimeFormat(dateLocale(l), { dateStyle: "medium" }).format(new Date(value))
+      : tr(l, "Data indisponível", "Date unavailable");
 
   return (
     <div className="max-w-3xl">
@@ -50,6 +89,71 @@ export default async function AdminAccountPage({
           </div>
         </dl>
       </section>
+
+      {admin.role === "owner" && (
+        <section className="mt-6 rounded-3xl border border-white/[0.07] bg-[#151515] p-6 sm:p-8">
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] text-[#ff8a32]">Admin access</p>
+            <h2 className="mt-1 text-xl font-semibold">{tr(l, "Owners do Momo", "Momo Owners")}</h2>
+            <p className="mt-3 text-sm leading-6 text-white/50">
+              {tr(
+                l,
+                "Convida outro Owner para ter acesso total ao Momo Admin. O convite é enviado por email e só fica utilizável depois da confirmação.",
+                "Invite another Owner to have full access to Momo Admin. The invite is sent by email and only becomes usable after confirmation.",
+              )}
+            </p>
+          </div>
+
+          <form action={inviteAdminOwner} className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <input type="hidden" name="uiLanguage" value={l} />
+            <input
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+              placeholder="owner@example.com"
+              className="min-h-11 flex-1 rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50"
+            />
+            <FormSubmitButton
+              pendingLabel={tr(l, "A enviar…", "Sending…")}
+              className="rounded-xl bg-[#ff7a18] px-5 py-3 text-sm font-semibold text-[#151515] transition hover:bg-[#ff9138]"
+            >
+              {tr(l, "Convidar Owner", "Invite Owner")}
+            </FormSubmitButton>
+          </form>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-white/[0.07]">
+            {owners.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-white/35">
+                {tr(l, "Não foi possível carregar os Owners.", "Could not load Owners.")}
+              </div>
+            ) : (
+              <div className="divide-y divide-white/[0.05]">
+                {owners.map((owner) => {
+                  const current = owner.userId === admin.userId;
+                  const active = Boolean(owner.emailConfirmedAt);
+                  return (
+                    <div key={owner.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-medium text-white/85">
+                          {owner.email}
+                          {current && <span className="ml-2 text-xs font-normal text-white/35">{tr(l, "(tu)", "(you)")}</span>}
+                        </p>
+                        <p className="mt-1 text-xs text-white/35">
+                          Owner · {active ? tr(l, "Ativo", "Active") : tr(l, "Convite pendente", "Pending invite")} · {formatDate(owner.invitedAt)}
+                        </p>
+                      </div>
+                      <span className={`rounded-full border px-2.5 py-1 text-[11px] ${active ? "border-emerald-300/15 text-emerald-200/70" : "border-amber-300/15 text-amber-200/70"}`}>
+                        {active ? tr(l, "Email confirmado", "Email confirmed") : tr(l, "A aguardar confirmação", "Awaiting confirmation")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="mt-6 rounded-3xl border border-white/[0.07] bg-[#151515] p-6 sm:p-8">
         <h2 className="text-xl font-semibold">{tr(l, "Idioma da interface", "Interface language")}</h2>

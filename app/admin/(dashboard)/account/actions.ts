@@ -1,14 +1,127 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { normalizeUiLanguage, tr } from "@/lib/i18n/ui";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function accountError(language: "pt" | "en", message: string): never {
   redirect(`/admin/account?error=${encodeURIComponent(message)}&lang=${language}`);
+}
+
+function accountNotice(language: "pt" | "en", message: string): never {
+  redirect(`/admin/account?notice=${encodeURIComponent(message)}&lang=${language}`);
+}
+
+async function appOrigin() {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${protocol}://${host}`;
+}
+
+export async function inviteAdminOwner(formData: FormData) {
+  const session = await requireAdmin();
+  const language = normalizeUiLanguage(formData.get("uiLanguage") ?? session.language);
+
+  if (session.role !== "owner") {
+    accountError(language, tr(language, "Só um Owner pode convidar outro Owner.", "Only an Owner can invite another Owner."));
+  }
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 320);
+  if (!emailPattern.test(email)) {
+    accountError(language, tr(language, "Introduz um endereço de email válido.", "Enter a valid email address."));
+  }
+  if (email === session.email.toLowerCase()) {
+    accountError(language, tr(language, "Este email já pertence à tua conta.", "This email already belongs to your account."));
+  }
+
+  const admin = createSupabaseAdmin();
+  const { data: existingAdmin, error: existingAdminError } = await admin
+    .from("admin_users")
+    .select("user_id, role")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingAdminError) {
+    console.error("[admin-owner-invite] Could not check existing Admin access:", existingAdminError);
+    accountError(language, tr(language, "Não foi possível validar este email. Tenta novamente.", "Could not validate this email. Please try again."));
+  }
+  if (existingAdmin) {
+    accountError(
+      language,
+      existingAdmin.role === "owner"
+        ? tr(language, "Este email já é Owner do Momo Admin.", "This email is already a Momo Admin Owner.")
+        : tr(language, "Este email já tem acesso ao Momo Admin.", "This email already has access to Momo Admin."),
+    );
+  }
+
+  const origin = await appOrigin();
+  const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${origin}/admin/accept-invite?lang=${language}`,
+    data: {
+      momo_admin_role: "owner",
+      momo_admin_invited_by: session.userId,
+      momo_admin_language: language,
+    },
+  });
+
+  if (inviteError || !inviteData.user?.id) {
+    console.error("[admin-owner-invite] Could not create Auth invite:", {
+      email,
+      error: inviteError?.message ?? "Missing invited user",
+    });
+    const alreadyRegistered = inviteError?.message.toLowerCase().includes("already") ?? false;
+    accountError(
+      language,
+      alreadyRegistered
+        ? tr(
+            language,
+            "Este email já possui uma conta no Momo e não pode ser convidado automaticamente como Owner.",
+            "This email already has a Momo account and cannot be invited automatically as an Owner.",
+          )
+        : tr(language, "Não foi possível enviar o convite. Tenta novamente.", "Could not send the invite. Please try again."),
+    );
+  }
+
+  const { error: grantError } = await admin.from("admin_users").insert({
+    user_id: inviteData.user.id,
+    email,
+    role: "owner",
+    ui_language: language,
+  });
+
+  if (grantError) {
+    await admin.auth.admin.deleteUser(inviteData.user.id);
+    console.error("[admin-owner-invite] Could not grant Owner access:", {
+      email,
+      userId: inviteData.user.id,
+      error: grantError.message,
+    });
+    accountError(
+      language,
+      tr(language, "O convite não ficou concluído. Tenta novamente.", "The invite could not be completed. Please try again."),
+    );
+  }
+
+  revalidatePath("/admin/account");
+  accountNotice(
+    language,
+    tr(
+      language,
+      `Convite de Owner enviado para ${email}. O acesso fica pronto depois de confirmar o email e criar a password.`,
+      `Owner invite sent to ${email}. Access will be ready after the email is confirmed and a password is created.`,
+    ),
+  );
 }
 
 export async function updateAdminUiLanguage(formData: FormData) {
