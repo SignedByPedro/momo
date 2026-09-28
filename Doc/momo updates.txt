@@ -29,3 +29,9 @@ Selo empresarial no ai para garantir segurança  da informação.
 Mais que uma vez no chatbot do cliente ele recomenda visitar o website para consultar uma informação, não faz sentido porque o user já esta no website.
 
 O knowledge está bugado nos clientes.
+
+No botão de suport tendo em conta que a caixa toda já tem um hover effect quero retirar o hover effect do widget em sim (ou seja o circulo que e igual ao momo sales).
+
+Aprimorar o website analyses para conseguir retirar mais informação.
+
+Dar a possibilidade de se convidar membros no admin.

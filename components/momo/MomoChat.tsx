@@ -96,8 +96,8 @@ const copy = {
   pt: {
     introTitle: "Olá, sou o Momo 👋",
     subtitle: "Assistente de IA · Online",
-    intro1: "Ajudo organizações a responder a quem as procura, prestar apoio e aproveitar melhor cada conversa.",
-    intro2: "Se partilhares o teu website, posso analisá-lo e mostrar-te como o Momo poderia ajudar na tua organização.",
+    intro1: "Ajudo empresas a responder a clientes e a transformar conversas em oportunidades.",
+    intro2: "Se partilhares o teu website, posso analisá-lo e mostrar-te como o Momo poderia ajudar no teu negócio.",
     actions: ["Como funciona?", "O que consegues fazer?", "Quanto custa?", "Tenho uma empresa"],
     placeholder: "Escreve uma mensagem...",
     error: "Não consegui responder agora. Tenta novamente dentro de momentos.",
@@ -110,8 +110,8 @@ const copy = {
   en: {
     introTitle: "Hi, I'm Momo 👋",
     subtitle: "AI assistant · Online",
-    intro1: "I help organizations respond to the people who reach out, provide support and make every conversation more useful.",
-    intro2: "Share your website and I can analyse it to show how Momo could help your organization.",
+    intro1: "I help businesses answer customers and turn conversations into opportunities.",
+    intro2: "Share your website and I can analyse it to show how Momo could help your business.",
     actions: ["How does it work?", "What can you do?", "How much does it cost?", "I have a business"],
     placeholder: "Write a message...",
     error: "I couldn't answer right now. Please try again in a moment.",
@@ -170,14 +170,6 @@ export default function MomoChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
-
-  useEffect(() => {
-    function openMomoFromHero() {
-      setOpen(true);
-    }
-    window.addEventListener("momo-sales:open", openMomoFromHero);
-    return () => window.removeEventListener("momo-sales:open", openMomoFromHero);
-  }, []);
 
   useEffect(() => {
     if (!open) return;

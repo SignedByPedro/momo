@@ -126,14 +126,14 @@ function ChatGlyph({ size }: { size: number }) {
       <path
         d="M7.25 5.75h9.5A3.25 3.25 0 0 1 20 9v4.5a3.25 3.25 0 0 1-3.25 3.25h-4.7l-3.8 2.5v-2.5h-1A3.25 3.25 0 0 1 4 13.5V9a3.25 3.25 0 0 1 3.25-3.25Z"
         stroke="currentColor"
-        strokeWidth="1.9"
+        strokeWidth="2.1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M8 11.25h8"
         stroke="currentColor"
-        strokeWidth="1.9"
+        strokeWidth="2.1"
         strokeLinecap="round"
       />
     </svg>
@@ -178,7 +178,7 @@ function LauncherAvatar({
     );
   }
 
-  return <ChatGlyph size={size * 0.38} />;
+  return <ChatGlyph size={size * 0.52} />;
 }
 
 export default function EmbeddedClientWidget({
