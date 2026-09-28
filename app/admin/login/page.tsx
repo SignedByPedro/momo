@@ -37,7 +37,7 @@ export default async function AdminLoginPage({ searchParams }: Props) {
             autoComplete="email"
             required
             className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60"
-            placeholder="pedro@exemplo.com"
+            placeholder="admin@exemplo.com"
           />
 
           <label className="mt-5 block text-xs font-medium uppercase tracking-[0.14em] text-white/40">

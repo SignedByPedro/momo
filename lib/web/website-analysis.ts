@@ -2,10 +2,16 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
-const MAX_PAGES = 4;
-const MAX_PAGE_TEXT_CHARS = 6_000;
-const MAX_TOTAL_CONTEXT_CHARS = 18_000;
+const MAX_PAGES = 12;
+const MAX_PAGE_TEXT_CHARS = 12_000;
+const MAX_TOTAL_CONTEXT_CHARS = 120_000;
+const MAX_PROMPT_CONTEXT_CHARS = 24_000;
 const MAX_HTML_CHARS = 700_000;
+const MAX_DYNAMIC_TEXT_CHARS = 20_000;
+const MAX_SITEMAP_URLS = 40;
+const MAX_KNOWLEDGE_CHUNKS = 32;
+const TARGET_KNOWLEDGE_CHUNK_CHARS = 1_800;
+const MAX_KNOWLEDGE_CHUNK_CHARS = 2_400;
 const REQUEST_TIMEOUT_MS = 8_000;
 const MAX_REDIRECTS = 4;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -118,6 +124,114 @@ function extractDescription(html: string): string | null {
   return null;
 }
 
+function collectStructuredStrings(value: unknown, output: string[], depth = 0) {
+  if (depth > 10 || output.length > 1_000) return;
+
+  if (typeof value === "string") {
+    const compact = tidy(value);
+    if (compact) output.push(compact);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) collectStructuredStrings(item, output, depth + 1);
+    return;
+  }
+
+  if (value && typeof value === "object") {
+    for (const nested of Object.values(value as Record<string, unknown>)) {
+      collectStructuredStrings(nested, output, depth + 1);
+    }
+  }
+}
+
+function usefulDynamicString(value: string): boolean {
+  const compact = tidy(value);
+  if (compact.length < 4 || compact.length > 1_000) return false;
+  if (!/[A-Za-zÀ-ÿ]/.test(compact)) return false;
+  if (/^(?:https?:\/\/|\/_next\/|webpack|static\/|[a-f0-9]{24,})/i.test(compact)) return false;
+  if (/^\$[A-Za-z0-9:_-]+$/.test(compact)) return false;
+  if (/^(?:children|classname|href|src|style|key|ref|props|metadata|viewport|div|span|section|main|header|footer|nav|button|img|article)$/i.test(compact)) return false;
+  if (/\.(?:js|css|map|woff2?|ttf|ico)$/i.test(compact)) return false;
+
+  const cssSignals = compact.match(/(?:^|\s)(?:flex|grid|block|hidden|relative|absolute|fixed|sticky|items-[^\s]+|justify-[^\s]+|text-[^\s]+|bg-[^\s]+|border(?:-[^\s]+)?|rounded(?:-[^\s]+)?|p[trblxy]?-[^\s]+|m[trblxy]?-[^\s]+|w-[^\s]+|h-[^\s]+|sm:[^\s]+|md:[^\s]+|lg:[^\s]+)/g)?.length ?? 0;
+  if (cssSignals >= 3) return false;
+
+  if (!compact.includes(" ") && compact.length > 50) return false;
+  return true;
+}
+
+function extractStructuredScriptText(html: string): string {
+  const pieces: string[] = [];
+  const scriptPattern = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = scriptPattern.exec(html))) {
+    const attrs = parseAttributes(match[1] ?? "");
+    const type = (attrs.type ?? "").toLowerCase();
+    const id = (attrs.id ?? "").toLowerCase();
+    const body = decodeHtmlEntities(match[2] ?? "").trim();
+    if (!body) continue;
+
+    if (type === "application/ld+json" || id === "__next_data__") {
+      try {
+        const parsed = JSON.parse(body) as unknown;
+        const values: string[] = [];
+        collectStructuredStrings(parsed, values);
+        pieces.push(...values.filter(usefulDynamicString));
+      } catch {
+        // Ignore malformed structured data.
+      }
+    }
+  }
+
+  return pieces.join(" ").slice(0, MAX_DYNAMIC_TEXT_CHARS);
+}
+
+function extractNextFlightText(html: string): string {
+  const pieces: string[] = [];
+  const flightPattern = /self\.__next_f\.push\(\[\d+,"((?:\\.|[^"\\])*)"\]\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = flightPattern.exec(html))) {
+    let decoded = "";
+    try {
+      decoded = JSON.parse(`"${match[1] ?? ""}"`) as string;
+    } catch {
+      continue;
+    }
+
+    const quoted = /"((?:\\.|[^"\\]){3,})"/g;
+    let quotedMatch: RegExpExecArray | null;
+    while ((quotedMatch = quoted.exec(decoded))) {
+      try {
+        const value = JSON.parse(`"${quotedMatch[1] ?? ""}"`) as string;
+        if (usefulDynamicString(value)) pieces.push(tidy(value));
+      } catch {
+        // Ignore malformed serialized strings.
+      }
+    }
+  }
+
+  return pieces.join(" ").slice(0, MAX_DYNAMIC_TEXT_CHARS);
+}
+
+function mergeExtractedText(...values: string[]): string {
+  const seen = new Set<string>();
+  const parts: string[] = [];
+
+  for (const value of values) {
+    const compact = tidy(value);
+    if (!compact) continue;
+    const fingerprint = compact.toLowerCase().replace(/[^a-z0-9à-ÿ]+/g, " ").trim();
+    if (!fingerprint || seen.has(fingerprint)) continue;
+    seen.add(fingerprint);
+    parts.push(compact);
+  }
+
+  return parts.join(" ").slice(0, MAX_PAGE_TEXT_CHARS);
+}
+
 function normalizeInputUrl(input: string): URL {
   const trimmed = input.trim().replace(/[),.;!?]+$/g, "");
   const withProtocol = /^https?:\/\//i.test(trimmed)
@@ -223,7 +337,7 @@ async function fetchPublicHtml(startUrl: URL): Promise<{ url: URL; html: string 
       redirect: "manual",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; MomoWebsiteAnalyzer/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; MomoWebsiteAnalyzer/1.1)",
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
       },
@@ -247,6 +361,36 @@ async function fetchPublicHtml(startUrl: URL): Promise<{ url: URL; html: string 
 
     const html = (await response.text()).slice(0, MAX_HTML_CHARS);
     return { url: current, html };
+  }
+
+  throw new Error("Website redirected too many times.");
+}
+
+async function fetchPublicText(startUrl: URL, accept: string, maxChars = MAX_HTML_CHARS) {
+  let current = new URL(startUrl);
+
+  for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
+    await assertPublicUrl(current);
+
+    const response = await fetch(current, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; MomoWebsiteAnalyzer/1.1)",
+        Accept: accept,
+        "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
+      },
+    });
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) throw new Error("Website returned an invalid redirect.");
+      current = new URL(location, current);
+      continue;
+    }
+
+    if (!response.ok) throw new Error(`Website returned HTTP ${response.status}.`);
+    return { url: current, text: (await response.text()).slice(0, maxChars) };
   }
 
   throw new Error("Website redirected too many times.");
@@ -294,16 +438,60 @@ function extractMainHtml(html: string): string {
 }
 
 function extractPage(url: URL, html: string): PageSnapshot {
+  const visibleText = stripHtml(extractMainHtml(html));
+  const structuredText = extractStructuredScriptText(html);
+  const nextFlightText = extractNextFlightText(html);
+
   return {
     url: url.toString(),
     title: extractTitle(html),
     description: extractDescription(html),
-    text: stripHtml(extractMainHtml(html)).slice(0, MAX_PAGE_TEXT_CHARS),
+    text: mergeExtractedText(visibleText, structuredText, nextFlightText),
     links: extractLinks(url, html),
   };
 }
 
-function rankInternalLinks(home: PageSnapshot): string[] {
+async function discoverSitemapUrls(homeUrl: URL): Promise<string[]> {
+  try {
+    const sitemapUrl = new URL("/sitemap.xml", homeUrl.origin);
+    const { text } = await fetchPublicText(
+      sitemapUrl,
+      "application/xml,text/xml,text/plain;q=0.9,*/*;q=0.5",
+      500_000,
+    );
+
+    const urls: string[] = [];
+    const seen = new Set<string>();
+    const locPattern = /<loc\b[^>]*>([\s\S]*?)<\/loc\s*>/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = locPattern.exec(text)) && urls.length < MAX_SITEMAP_URLS) {
+      const raw = tidy(decodeHtmlEntities(match[1] ?? ""));
+      if (!raw) continue;
+
+      try {
+        const url = new URL(raw, homeUrl);
+        if (url.origin !== homeUrl.origin) continue;
+        if (url.pathname.endsWith(".xml")) continue;
+        if (/\.(?:pdf|jpg|jpeg|png|gif|webp|svg|zip|rar|mp4|mp3)$/i.test(url.pathname)) continue;
+        url.hash = "";
+        url.search = "";
+        const clean = url.toString();
+        if (seen.has(clean)) continue;
+        seen.add(clean);
+        urls.push(clean);
+      } catch {
+        // Ignore malformed sitemap URLs.
+      }
+    }
+
+    return urls;
+  } catch {
+    return [];
+  }
+}
+
+function rankInternalLinks(home: PageSnapshot, sitemapUrls: string[] = []): string[] {
   const keywords = [
     "about",
     "sobre",
@@ -336,11 +524,17 @@ function rankInternalLinks(home: PageSnapshot): string[] {
   ];
 
   const seen = new Set<string>();
-  const ranked = home.links
+  const candidates = [
+    ...home.links,
+    ...sitemapUrls.map((url) => ({ url, label: "sitemap" })),
+  ];
+
+  const ranked = candidates
     .map((link) => {
       try {
         const url = new URL(link.url);
         url.search = "";
+        url.hash = "";
         const cleanUrl = url.toString();
         const haystack = `${url.pathname} ${link.label}`.toLowerCase();
         let score = 0;
@@ -349,10 +543,16 @@ function rankInternalLinks(home: PageSnapshot): string[] {
           if (haystack.includes(keyword)) score += 6;
         }
 
+        for (const unwanted of ["privacy", "terms", "cookies", "legal", "login", "signin", "admin", "checkout", "cart"]) {
+          if (haystack.includes(unwanted)) score -= 6;
+        }
+
         const depth = url.pathname.split("/").filter(Boolean).length;
-        if (depth === 1) score += 2;
+        if (depth === 1) score += 3;
+        if (depth === 2) score += 1;
         if (depth > 3) score -= 2;
         if (url.pathname === "/") score -= 20;
+        if (link.label === "sitemap") score += 1;
 
         return { cleanUrl, score };
       } catch {
@@ -411,7 +611,8 @@ async function crawlWebsite(input: string): Promise<WebsiteAnalysis> {
   }
 
   const home = extractPage(homeResult.url, homeResult.html);
-  const selectedLinks = rankInternalLinks(home);
+  const sitemapUrls = await discoverSitemapUrls(homeResult.url);
+  const selectedLinks = rankInternalLinks(home, sitemapUrls);
 
   const additionalResults = await Promise.allSettled(
     selectedLinks.map(async (link) => {
@@ -507,10 +708,16 @@ async function cacheAnalysis(analysis: WebsiteAnalysis) {
   }
 }
 
-export async function getOrAnalyzeWebsite(input: string): Promise<WebsiteAnalysis> {
+export async function getOrAnalyzeWebsite(
+  input: string,
+  options: { forceRefresh?: boolean } = {},
+): Promise<WebsiteAnalysis> {
   const cacheKey = websiteCacheKey(input);
-  const cached = await getCachedAnalysis(cacheKey);
-  if (cached) return cached;
+
+  if (!options.forceRefresh) {
+    const cached = await getCachedAnalysis(cacheKey);
+    if (cached) return cached;
+  }
 
   const analysis = await crawlWebsite(input);
   await cacheAnalysis(analysis);
@@ -581,6 +788,7 @@ export function inferBusinessTypeFromWebsite(analysis: WebsiteAnalysis): string 
 export function websiteAnalysisPromptContext(analysis: WebsiteAnalysis): string {
   const sourceList = analysis.sourceUrls.map((url) => `- ${url}`).join("\n");
   const dataLines = analysis.content
+    .slice(0, MAX_PROMPT_CONTEXT_CHARS)
     .split("\n")
     .map((line) => `SITE_DATA: ${line}`)
     .join("\n");
@@ -622,6 +830,60 @@ export type WebsiteKnowledgeChunk = {
   category: string;
 };
 
+function splitKnowledgeText(value: string): string[] {
+  const compact = tidy(value);
+  if (!compact) return [];
+  if (compact.length <= MAX_KNOWLEDGE_CHUNK_CHARS) return [compact];
+
+  const sentences = compact
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  const chunks: string[] = [];
+  let current = "";
+
+  const flush = () => {
+    if (current.trim()) chunks.push(current.trim());
+    current = "";
+  };
+
+  for (const sentence of sentences) {
+    if (sentence.length > MAX_KNOWLEDGE_CHUNK_CHARS) {
+      flush();
+      let remaining = sentence;
+      while (remaining.length > MAX_KNOWLEDGE_CHUNK_CHARS) {
+        let cut = remaining.lastIndexOf(" ", MAX_KNOWLEDGE_CHUNK_CHARS);
+        if (cut < TARGET_KNOWLEDGE_CHUNK_CHARS / 2) cut = MAX_KNOWLEDGE_CHUNK_CHARS;
+        chunks.push(remaining.slice(0, cut).trim());
+        remaining = remaining.slice(cut).trim();
+      }
+      if (remaining) current = remaining;
+      continue;
+    }
+
+    const candidate = current ? `${current} ${sentence}` : sentence;
+    if (candidate.length > TARGET_KNOWLEDGE_CHUNK_CHARS && current) {
+      flush();
+      current = sentence;
+    } else {
+      current = candidate;
+    }
+  }
+
+  flush();
+  return chunks;
+}
+
+function knowledgeFingerprint(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 export function websiteAnalysisToKnowledgeChunks(
   analysis: WebsiteAnalysis,
 ): WebsiteKnowledgeChunk[] {
@@ -630,27 +892,42 @@ export function websiteAnalysisToKnowledgeChunks(
     .map((block) => block.trim())
     .filter(Boolean);
 
-  const chunks = rawBlocks.map((block, index) => {
-    const url = block.match(/^URL:\s*(.+)$/m)?.[1]?.trim() ?? analysis.sourceUrls[index] ?? null;
+  const chunks: WebsiteKnowledgeChunk[] = [];
+  const seen = new Set<string>();
+
+  for (let pageIndex = 0; pageIndex < rawBlocks.length; pageIndex += 1) {
+    const block = rawBlocks[pageIndex];
+    const url = block.match(/^URL:\s*(.+)$/m)?.[1]?.trim() ?? analysis.sourceUrls[pageIndex] ?? null;
     const title = block.match(/^Title:\s*(.+)$/m)?.[1]?.trim();
     const description = block.match(/^Description:\s*(.+)$/m)?.[1]?.trim();
     const visibleText = block.match(/^Visible text:\s*([\s\S]*)$/m)?.[1]?.trim() ?? "";
+    const usefulTitle = title && title !== "Unknown" ? title : `Website, página ${pageIndex + 1}`;
+    const baseText = visibleText || description || "";
+    const sections = splitKnowledgeText(baseText);
 
-    const usefulTitle = title && title !== "Unknown" ? title : `Website, página ${index + 1}`;
-    const content = [description, visibleText]
-      .filter((value): value is string => Boolean(value))
-      .join("\n\n")
-      .trim();
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
+      const section = sections[sectionIndex];
+      const includeDescription = Boolean(description && visibleText && sectionIndex === 0);
+      const content = [includeDescription ? description : null, section]
+        .filter((value): value is string => Boolean(value))
+        .join("\n\n")
+        .trim();
 
-    return {
-      title: usefulTitle,
-      content: content || block,
-      sourceUrl: url,
-      category: "Website",
-    };
-  });
+      if (content.length < 80) continue;
+      const fingerprint = knowledgeFingerprint(content);
+      if (!fingerprint || seen.has(fingerprint)) continue;
+      seen.add(fingerprint);
 
-  return chunks
-    .filter((chunk) => chunk.content.length >= 80)
-    .slice(0, MAX_PAGES);
+      chunks.push({
+        title: sections.length > 1 ? `${usefulTitle} · ${sectionIndex + 1}` : usefulTitle,
+        content,
+        sourceUrl: url,
+        category: "Website",
+      });
+
+      if (chunks.length >= MAX_KNOWLEDGE_CHUNKS) return chunks;
+    }
+  }
+
+  return chunks;
 }

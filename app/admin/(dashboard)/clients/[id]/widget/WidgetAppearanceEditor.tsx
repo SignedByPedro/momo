@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import ClientAgentAvatar from "@/components/widget/ClientAgentAvatar";
+import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "@/components/momo/LauncherChatGlyph";
 import type {
   ClientWidgetConfig,
   WidgetAvatarStyle,
@@ -126,25 +127,7 @@ function LauncherAvatarContent({
     );
   }
 
-  return (
-    <svg
-      width={launcherPx * 0.38}
-      height={launcherPx * 0.38}
-      viewBox="0 0 24 24"
-      fill="none"
-      className="text-white"
-      aria-hidden="true"
-    >
-      <path
-        d="M7.25 5.75h9.5A3.25 3.25 0 0 1 20 9v4.5a3.25 3.25 0 0 1-3.25 3.25h-4.7l-3.8 2.5v-2.5h-1A3.25 3.25 0 0 1 4 13.5V9a3.25 3.25 0 0 1 3.25-3.25Z"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M8 11.25h8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-    </svg>
-  );
+  return <LauncherChatGlyph size={launcherPx * LAUNCHER_ICON_RATIO} />;
 }
 
 export default function WidgetAppearanceEditor({

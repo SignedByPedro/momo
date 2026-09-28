@@ -149,7 +149,7 @@ input:disabled {
     filter 320ms ease;
 }
 
-.momo-launcher:hover {
+.momo-launcher:not(.momo-support-launcher-orb):hover {
   filter: brightness(1.16) saturate(1.12);
   transform: translateY(-2px) scale(1.045);
   border-color: rgba(255, 255, 255, 0.38);
@@ -159,12 +159,12 @@ input:disabled {
     inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
-.momo-launcher:hover::before {
+.momo-launcher:not(.momo-support-launcher-orb):hover::before {
   opacity: 1;
   filter: blur(4px) saturate(1.28) brightness(1.08);
 }
 
-.momo-launcher:hover::after {
+.momo-launcher:not(.momo-support-launcher-orb):hover::after {
   opacity: 1;
   filter: brightness(1.12);
 }
@@ -222,7 +222,7 @@ input:disabled {
   transition: transform 180ms ease;
 }
 
-.momo-launcher:hover .momo-launcher-icon {
+.momo-launcher:not(.momo-support-launcher-orb):hover .momo-launcher-icon {
   transform: scale(1.04);
 }
 

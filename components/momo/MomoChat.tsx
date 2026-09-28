@@ -2,9 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import ChatMessage from "./ChatMessage";
 import MomoIcon from "./MomoIcon";
+import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "./LauncherChatGlyph";
 
 type Language = "pt" | "en";
 
@@ -96,9 +103,16 @@ const copy = {
   pt: {
     introTitle: "Olá, sou o Momo 👋",
     subtitle: "Assistente de IA · Online",
-    intro1: "Ajudo empresas a responder a clientes e a transformar conversas em oportunidades.",
-    intro2: "Se partilhares o teu website, posso analisá-lo e mostrar-te como o Momo poderia ajudar no teu negócio.",
-    actions: ["Como funciona?", "O que consegues fazer?", "Quanto custa?", "Tenho uma empresa"],
+    intro1:
+      "Ajudo organizações a responder a quem as procura, prestar apoio e aproveitar melhor cada conversa.",
+    intro2:
+      "Se partilhares o teu website, posso analisá-lo e mostrar-te como o Momo poderia ajudar na tua organização.",
+    actions: [
+      "Como funciona?",
+      "O que consegues fazer?",
+      "Quanto custa?",
+      "Tenho uma empresa",
+    ],
     placeholder: "Escreve uma mensagem...",
     error: "Não consegui responder agora. Tenta novamente dentro de momentos.",
     close: "Fechar chat",
@@ -110,9 +124,16 @@ const copy = {
   en: {
     introTitle: "Hi, I'm Momo 👋",
     subtitle: "AI assistant · Online",
-    intro1: "I help businesses answer customers and turn conversations into opportunities.",
-    intro2: "Share your website and I can analyse it to show how Momo could help your business.",
-    actions: ["How does it work?", "What can you do?", "How much does it cost?", "I have a business"],
+    intro1:
+      "I help organizations respond to the people who reach out, provide support and make every conversation more useful.",
+    intro2:
+      "Share your website and I can analyse it to show how Momo could help your organization.",
+    actions: [
+      "How does it work?",
+      "What can you do?",
+      "How much does it cost?",
+      "I have a business",
+    ],
     placeholder: "Write a message...",
     error: "I couldn't answer right now. Please try again in a moment.",
     close: "Close chat",
@@ -123,19 +144,24 @@ const copy = {
   },
 } as const;
 
-function ChatGlyph() {
-  return (
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M6.75 5.5h10.5A3.75 3.75 0 0 1 21 9.25v4A3.75 3.75 0 0 1 17.25 17h-5.1l-4.4 2.8V17h-1A3.75 3.75 0 0 1 3 13.25v-4A3.75 3.75 0 0 1 6.75 5.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 11.25h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
+const SALES_LAUNCHER_SIZE = 60;
 
 function CloseGlyph() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="m7 7 10 10M17 7 7 17"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -143,21 +169,30 @@ function CloseGlyph() {
 export default function MomoChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const language = useSyncExternalStore(subscribeToLanguage, getClientLanguage, getServerLanguage);
+  const language = useSyncExternalStore(
+    subscribeToLanguage,
+    getClientLanguage,
+    getServerLanguage,
+  );
   const conversationIdRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const launcherRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, error, setMessages, clearError } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat", fetch: chatApiFetch }),
-  });
+  const { messages, sendMessage, status, error, setMessages, clearError } =
+    useChat({
+      transport: new DefaultChatTransport({
+        api: "/api/chat",
+        fetch: chatApiFetch,
+      }),
+    });
 
   const busy = status === "submitted" || status === "streaming";
   const t = copy[language];
   const errorCode = chatErrorCode(error);
   const requiresNewChat =
-    errorCode === "chat_message_limit" || errorCode === "conversation_too_large";
+    errorCode === "chat_message_limit" ||
+    errorCode === "conversation_too_large";
   const errorText = error ? friendlyChatError(error, language) : t.error;
 
   useEffect(() => {
@@ -170,6 +205,15 @@ export default function MomoChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
+
+  useEffect(() => {
+    function openMomoFromHero() {
+      setOpen(true);
+    }
+    window.addEventListener("momo-sales:open", openMomoFromHero);
+    return () =>
+      window.removeEventListener("momo-sales:open", openMomoFromHero);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -193,7 +237,8 @@ export default function MomoChat() {
     const value = text.trim();
     if (!value || busy) return;
     setInput("");
-    if (!conversationIdRef.current) conversationIdRef.current = crypto.randomUUID();
+    if (!conversationIdRef.current)
+      conversationIdRef.current = crypto.randomUUID();
     await sendMessage(
       { text: value },
       { body: { conversationId: conversationIdRef.current, language } },
@@ -215,23 +260,38 @@ export default function MomoChat() {
   return (
     <>
       {open && (
-        <section ref={panelRef} className="momo-chat-panel fixed bottom-24 right-4 z-50 flex h-[min(650px,calc(100vh-120px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-white/[0.085] bg-[#151515]/95 shadow-[0_30px_90px_rgba(0,0,0,0.48)] backdrop-blur-xl sm:right-7">
+        <section
+          ref={panelRef}
+          className="momo-chat-panel fixed bottom-24 right-4 z-50 flex h-[min(650px,calc(100vh-120px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-white/8.5 bg-[#151515]/95 shadow-[0_30px_90px_rgba(0,0,0,0.48)] backdrop-blur-xl sm:right-7"
+        >
           <header className="relative flex items-center justify-between border-b border-white/[0.07] px-4 py-3.5">
-            <div className="pointer-events-none absolute inset-x-7 bottom-0 h-px bg-gradient-to-r from-transparent via-[#ff8426]/25 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-7 bottom-0 h-px bg-linear-to-r from-transparent via-[#ff8426]/25 to-transparent" />
             <div className="flex items-center gap-2.5">
               <MomoIcon size={36} />
               <div>
-                <div className="text-sm font-semibold tracking-[-0.01em]">Momo</div>
-                <div className="flex items-center gap-1.5 text-[11px] text-white/45"><span className="momo-online-dot h-1.5 w-1.5 rounded-full" />{t.subtitle}</div>
+                <div className="text-sm font-semibold tracking-[-0.01em]">
+                  Momo
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-white/45">
+                  <span className="momo-online-dot h-1.5 w-1.5 rounded-full" />
+                  {t.subtitle}
+                </div>
               </div>
             </div>
-            <button type="button" aria-label={t.close} onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full text-white/45 transition duration-200 hover:bg-white/[0.07] hover:text-white active:scale-95"><CloseGlyph /></button>
+            <button
+              type="button"
+              aria-label={t.close}
+              onClick={() => setOpen(false)}
+              className="grid h-8 w-8 place-items-center rounded-full text-white/45 transition duration-200 hover:bg-white/[0.07] hover:text-white active:scale-95"
+            >
+              <CloseGlyph />
+            </button>
           </header>
 
           <div className="momo-scrollbar flex-1 space-y-4 overflow-y-auto px-4 py-4">
             <div className="flex gap-2.5">
               <MomoIcon size={27} />
-              <div className="max-w-[82%] rounded-[18px] rounded-bl-md border border-white/[0.065] bg-white/[0.055] px-3.5 py-2.5 text-[14px] leading-5 text-[#ededed] shadow-sm">
+              <div className="max-w-[82%] rounded-[18px] rounded-bl-md border border-white/6.5 bg-white/5.5 px-3.5 py-2.5 text-[14px] leading-5 text-[#ededed] shadow-sm">
                 <p>{t.introTitle}</p>
                 <p className="mt-2 text-white/80">{t.intro1}</p>
                 <p className="mt-2">{t.intro2}</p>
@@ -241,24 +301,39 @@ export default function MomoChat() {
             {messages.length === 0 && (
               <div className="flex flex-wrap gap-2 pl-9">
                 {t.actions.map((action) => (
-                  <button key={action} type="button" onClick={() => void submit(action)} className="momo-quick-action rounded-full px-3 py-1.5 text-xs transition duration-200 active:scale-[0.98]">{action}</button>
+                  <button
+                    key={action}
+                    type="button"
+                    onClick={() => void submit(action)}
+                    className="momo-quick-action rounded-full px-3 py-1.5 text-xs transition duration-200 active:scale-[0.98]"
+                  >
+                    {action}
+                  </button>
                 ))}
               </div>
             )}
 
-            {messages.map((message) => <ChatMessage key={message.id} message={message} />)}
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
 
             {busy && status === "submitted" && (
               <div className="flex items-center gap-2.5">
                 <MomoIcon size={27} />
-                <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-md border border-white/[0.055] bg-white/[0.05] px-3.5 py-3.5">
-                  {[0, 1, 2].map((dot) => <span key={dot} className="momo-typing-dot h-1.5 w-1.5 rounded-full bg-white/55" style={{ animationDelay: `${dot * 150}ms` }} />)}
+                <div className="flex items-center gap-1.5 rounded-[18px] rounded-bl-md border border-white/5.5 bg-white/5 px-3.5 py-3.5">
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      key={dot}
+                      className="momo-typing-dot h-1.5 w-1.5 rounded-full bg-white/55"
+                      style={{ animationDelay: `${dot * 150}ms` }}
+                    />
+                  ))}
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="rounded-xl border border-[#ff8426]/20 bg-[#ff8426]/[0.08] px-3 py-2 text-xs leading-5 text-white/80">
+              <div className="rounded-xl border border-[#ff8426]/20 bg-[#ff8426]/8 px-3 py-2 text-xs leading-5 text-white/80">
                 <p>{errorText}</p>
                 {requiresNewChat && (
                   <button
@@ -274,28 +349,101 @@ export default function MomoChat() {
             <div ref={bottomRef} />
           </div>
 
-          <form onSubmit={onSubmit} className="border-t border-white/[0.07] p-3">
+          <form
+            onSubmit={onSubmit}
+            className="border-t border-white/[0.07] p-3"
+          >
             <div className="momo-input-shell flex items-end gap-2 rounded-[19px] p-1.5 pl-3">
-              <textarea rows={1} value={input} disabled={requiresNewChat} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void submit(input); } }} placeholder={requiresNewChat ? (language === "en" ? "Start a new chat to continue" : "Começa um novo chat para continuar") : t.placeholder} className="max-h-28 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-white outline-none placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-50" />
-              <button type="submit" disabled={!input.trim() || busy || requiresNewChat} aria-label={t.send} className="momo-send-button grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-[#18110c] transition duration-200 disabled:cursor-not-allowed disabled:opacity-30">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <textarea
+                rows={1}
+                value={input}
+                disabled={requiresNewChat}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void submit(input);
+                  }
+                }}
+                placeholder={
+                  requiresNewChat
+                    ? language === "en"
+                      ? "Start a new chat to continue"
+                      : "Começa um novo chat para continuar"
+                    : t.placeholder
+                }
+                className="max-h-28 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-white outline-none placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || busy || requiresNewChat}
+                aria-label={t.send}
+                className="momo-send-button grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-[#18110c] transition duration-200 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 12h13M13 7l5 5-5 5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             </div>
-            <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-white/28" aria-label="Language">
+            <div
+              className="mt-2 flex items-center justify-center gap-1 text-[10px] text-white/28"
+              aria-label="Language"
+            >
               {(["pt", "en"] as Language[]).map((value) => (
-                <button key={value} type="button" onClick={() => chooseLanguage(value)} className={`rounded-md px-1.5 py-0.5 uppercase transition ${language === value ? "bg-white/[0.07] text-white/65" : "hover:text-white/55"}`} aria-pressed={language === value}>{value}</button>
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => chooseLanguage(value)}
+                  className={`rounded-md px-1.5 py-0.5 uppercase transition ${language === value ? "bg-white/[0.07] text-white/65" : "hover:text-white/55"}`}
+                  aria-pressed={language === value}
+                >
+                  {value}
+                </button>
               ))}
             </div>
           </form>
         </section>
       )}
 
-      <div ref={launcherRef} className="group fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7">
-        {!open && <div className="pointer-events-none absolute right-[68px] top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-full border border-white/[0.08] bg-[#171717]/95 px-3 py-1.5 text-xs text-white/65 opacity-0 shadow-lg backdrop-blur-lg transition duration-200 group-hover:translate-x-[-2px] group-hover:opacity-100 sm:block">{t.hover}</div>}
-        <button type="button" aria-label={open ? t.closeMomo : t.openMomo} aria-expanded={open} onClick={() => setOpen((value) => !value)} className={`momo-launcher ${open ? "is-open" : ""}`}>
+      <div
+        ref={launcherRef}
+        className="group fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7"
+      >
+        {!open && (
+          <div className="pointer-events-none absolute right-17 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-full border border-white/8 bg-[#171717]/95 px-3 py-1.5 text-xs text-white/65 opacity-0 shadow-lg backdrop-blur-lg transition duration-200 group-hover:-translate-x-0.5 group-hover:opacity-100 sm:block">
+            {t.hover}
+          </div>
+        )}
+        <button
+          type="button"
+          aria-label={open ? t.closeMomo : t.openMomo}
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+          className={`momo-launcher ${open ? "is-open" : ""}`}
+        >
           <span className="momo-launcher-glow" aria-hidden="true" />
           <span className="momo-launcher-highlight" aria-hidden="true" />
-          <span className="momo-launcher-icon">{open ? <CloseGlyph /> : <ChatGlyph />}</span>
+          <span className="momo-launcher-icon">
+            {open ? (
+              <CloseGlyph />
+            ) : (
+              <LauncherChatGlyph
+                size={SALES_LAUNCHER_SIZE * LAUNCHER_ICON_RATIO}
+              />
+            )}
+          </span>
         </button>
       </div>
     </>

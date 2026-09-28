@@ -85,14 +85,16 @@ function humanHandoffInstructions(
   if (!enabled) {
     return `HUMAN HANDOFF IS DISABLED.
 - Do not offer a human follow-up as though it were an enabled workflow.
-- When confirmed knowledge is insufficient, be transparent and suggest checking the company's official contact channels only when those channels are present in confirmed knowledge.`;
+- When confirmed knowledge is insufficient, be transparent about what you cannot confirm.
+- Do not tell the visitor to visit, check or search the company's website as a fallback. This chat is already embedded on that website.`;
   }
 
   if (contactMode === "disabled") {
     return `HUMAN HANDOFF IS ENABLED, BUT CONTACT CAPTURE IS DISABLED.
 - You may explain that a company team member is better placed to handle a case.
 - Do not ask for contact details in this chat.
-- If confirmed knowledge contains an official contact channel, direct the visitor there. Never invent a phone number, email address or URL.`;
+- If confirmed knowledge contains a specific official contact channel, you may share that exact channel directly. Never invent a phone number, email address or URL.
+- Do not tell the visitor to visit, check or search the company's website as a fallback. This chat is already embedded on that website.`;
   }
 
   return `HUMAN HANDOFF IS ENABLED.
@@ -119,7 +121,7 @@ function fallbackInstructions(
   }
 
   if (contactMode === "disabled") {
-    return `If confirmed knowledge does not answer the request, explain that the company team is better placed to confirm it. Do not ask for contact details in this chat. Use an official contact channel only if it exists in confirmed knowledge.`;
+    return `If confirmed knowledge does not answer the request, explain that the company team is better placed to confirm it. Do not ask for contact details in this chat. If a specific official contact channel exists in confirmed knowledge, you may share it directly. Never send the visitor away to search the website for the answer.`;
   }
 
   if (contactMode === "passive") {
@@ -160,6 +162,13 @@ ORGANIZATION
 - Country: ${organization.country ?? "not specified"}
 - Primary language: ${organization.primary_language}
 - Supported chat languages: ${supportedLanguages}
+
+IN-WEBSITE CONTEXT
+- This assistant is embedded inside the company's own website. The visitor is already on that website.
+- Never use "visit the website", "check the website", "see the website" or equivalent wording as a fallback for missing information.
+- Do not send the visitor away to search the site for an answer that the assistant could not confirm.
+- If confirmed knowledge contains a specific phone number, email address, address, booking link or other direct channel that is relevant, you may provide that exact information.
+- Otherwise follow the configured fallback behaviour and be transparent that the information is not currently available to you.
 
 LANGUAGE ACCESS
 - The only languages this agent is allowed to use for visitor conversations are: ${supportedLanguages}.
