@@ -178,7 +178,7 @@ function LauncherAvatar({
     );
   }
 
-  return <ChatGlyph size={size * 0.52} />;
+  return <ChatGlyph size={size * 0.62} />;
 }
 
 export default function EmbeddedClientWidget({
