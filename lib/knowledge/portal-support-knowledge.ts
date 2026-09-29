@@ -29,6 +29,69 @@ function latestUserMessage(messages: SupportMessage[]) {
   );
 }
 
+const SUPPORT_TOPIC_PATTERNS: Array<{ label: string; pattern: RegExp }> = [
+  {
+    label: "widget",
+    pattern: /\b(widget|launcher|avatar|hover|cores?|colors?|colours?|bot[aã]o|button|janela de chat|chat window|largura|width|altura|height|tamanho|size)\b/i,
+  },
+  {
+    label: "agent",
+    pattern: /\b(agente|agent|tom|tone|fallback|capta[cç][aã]o|capture|handoff|mensagem inicial|welcome message)\b/i,
+  },
+  {
+    label: "knowledge base",
+    pattern: /\b(knowledge|conhecimento|reindex|reindexar|indexa[cç][aã]o|website analysis|analisar website)\b/i,
+  },
+  {
+    label: "team",
+    pattern: /\b(team|equipa|owner|member|membro|convite|invite|seat|utilizador)\b/i,
+  },
+  {
+    label: "account",
+    pattern: /\b(conta|account|password|senha|palavra-passe|login|iniciar sess[aã]o)\b/i,
+  },
+  {
+    label: "company",
+    pattern: /\b(company|empresa|organiza[cç][aã]o|organization|idioma principal|primary language)\b/i,
+  },
+  {
+    label: "conversations and leads",
+    pattern: /\b(conversa|conversation|lead|leads|contacto|contato|contact)\b/i,
+  },
+  {
+    label: "support tickets",
+    pattern: /\b(ticket|suporte|support|equipa t[eé]cnica|technical team)\b/i,
+  },
+];
+
+function explicitSupportTopic(value: string): string | null {
+  for (const topic of SUPPORT_TOPIC_PATTERNS) {
+    if (topic.pattern.test(value)) return topic.label;
+  }
+  return null;
+}
+
+function retrievalQuery(messages: SupportMessage[]) {
+  const latest = latestUserMessage(messages);
+  if (!latest) return "";
+
+  // A short follow-up such as "Posso alterar o tamanho?" often omits the
+  // object because it is obvious in conversation. Keep an explicit topic from
+  // the current question when possible; otherwise inherit the nearest recent
+  // product area instead of searching the follow-up in isolation.
+  const currentTopic = explicitSupportTopic(latest);
+  if (currentTopic) return `${currentTopic}\n${latest}`.slice(0, 4000);
+
+  const recentContext = messages.slice(0, -1).slice(-8).reverse();
+  const inheritedTopic = recentContext
+    .map((message) => explicitSupportTopic(message.content))
+    .find((topic): topic is string => Boolean(topic));
+
+  return inheritedTopic
+    ? `${inheritedTopic}\n${latest}`.slice(0, 4000)
+    : latest.slice(0, 4000);
+}
+
 function shouldSearchSupportKnowledge(query: string) {
   const compact = query.trim().toLowerCase();
   if (!compact) return false;
@@ -180,10 +243,11 @@ export async function retrievePortalSupportKnowledge(messages: SupportMessage[])
     return { context: "", matches: [] as PortalSupportKnowledgeMatch[], semantic: false };
   }
 
-  // v3.4: support questions can change subject from one message to the next.
-  // Search the current question by itself and combine semantic retrieval with
-  // a lexical pass so exact portal terms and permissions remain reliable.
-  const query = latestMessage.slice(0, 4000);
+  // v3.34: keep explicit subject changes local to the current question, but
+  // resolve short/elliptical follow-ups against the nearest recent portal
+  // topic. This lets "Posso alterar o tamanho?" inherit "widget" from the
+  // conversation without forcing old context onto a new explicit subject.
+  const query = retrievalQuery(messages);
   const lexicalMatchesPromise = lexicalSupportKnowledge(query);
 
   try {
