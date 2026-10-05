@@ -40,7 +40,7 @@ const SUPPORT_TOPIC_PATTERNS: Array<{ label: string; pattern: RegExp }> = [
   },
   {
     label: "knowledge base",
-    pattern: /\b(knowledge|conhecimento|reindex|reindexar|indexa[cç][aã]o|website analysis|analisar website)\b/i,
+    pattern: /\b(knowledge|conhecimento|reindex|reindexar|indexa[cç][aã]o|website analysis|analisar website|rascunho|draft|reformular|reformula[cç][aã]o|entrada de conhecimento)\b/i,
   },
   {
     label: "team",

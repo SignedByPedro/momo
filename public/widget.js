@@ -69,6 +69,8 @@
     open: false,
     position: "right",
     launcherSize: 60,
+    panelWidth: 390,
+    panelHeight: 570,
     launcherHovered: false,
     hoverLabelText: "",
     hoverLabelEnabled: false,
@@ -134,8 +136,10 @@
     updateHoverLabel(state);
 
     var mobile = window.innerWidth < 520;
-    var width = mobile ? window.innerWidth : Math.min(430, window.innerWidth);
-    var height = mobile ? window.innerHeight : Math.min(690, window.innerHeight);
+    var panelWidth = Math.min(520, Math.max(390, Number(state.panelWidth) || 390));
+    var panelHeight = Math.min(760, Math.max(570, Number(state.panelHeight) || 570));
+    var width = mobile ? window.innerWidth : Math.min(panelWidth + 40, window.innerWidth);
+    var height = mobile ? window.innerHeight : Math.min(panelHeight + 120, window.innerHeight);
     iframe.style.width = width + "px";
     iframe.style.height = height + "px";
   }
@@ -149,6 +153,8 @@
       open: Boolean(data.open),
       position: data.position === "left" ? "left" : "right",
       launcherSize: Number(data.launcherSize) || 60,
+      panelWidth: Number(data.panelWidth) || 390,
+      panelHeight: Number(data.panelHeight) || 570,
       launcherHovered: Boolean(data.launcherHovered),
       hoverLabelText: typeof data.hoverLabelText === "string" ? data.hoverLabelText : "",
       hoverLabelEnabled: Boolean(data.hoverLabelEnabled),
@@ -161,24 +167,6 @@
   window.addEventListener("resize", function () {
     applyState(lastState);
   });
-
-  // When the chat is open, a click anywhere on the host page outside the
-  // iframe should close it. Clicks inside the iframe do not bubble into this
-  // document, so they are naturally ignored here.
-  document.addEventListener(
-    "pointerdown",
-    function (event) {
-      if (!lastState.open) return;
-      if (event.target === iframe) return;
-      if (!iframe.contentWindow) return;
-
-      iframe.contentWindow.postMessage(
-        { type: "momo:close-widget", key: key },
-        momoOrigin,
-      );
-    },
-    true,
-  );
 
   function mount() {
     if (!document.body || iframe.isConnected) return;

@@ -9,6 +9,10 @@ import { buildPortalSupportPrompt } from "@/lib/ai/prompts/portal-support";
 import { normalizeSupportReplyText } from "@/lib/ai/support-plain-text";
 import { redactSupportSecrets } from "@/lib/support/secret-redaction";
 import { retrievePortalSupportKnowledge } from "@/lib/knowledge/portal-support-knowledge";
+import {
+  normalizeSupportKnowledgeDraft,
+  type SupportKnowledgeDraft,
+} from "@/lib/knowledge/client-knowledge-write";
 import { sendNewSupportTicketNotification } from "@/lib/notifications/support-email";
 import { requirePortal } from "@/lib/portal/auth";
 import {
@@ -40,6 +44,7 @@ type SupportMessage = {
 type SupportRequest = {
   messages?: SupportMessage[];
   activeTicketId?: string | null;
+  pendingKnowledgeDraft?: unknown;
 };
 
 type SupportDecision = {
@@ -49,6 +54,10 @@ type SupportDecision = {
   priority: SupportTicketPriority;
   subject: string;
   summary: string;
+  knowledgeDraftReady: boolean;
+  knowledgeTitle: string;
+  knowledgeCategory: string;
+  knowledgeContent: string;
 };
 
 const categories = new Set<SupportTicketCategory>([
@@ -75,8 +84,23 @@ const supportDecisionSchema = jsonSchema<SupportDecision>({
     priority: { type: "string", enum: ["low", "normal", "high"] },
     subject: { type: "string" },
     summary: { type: "string" },
+    knowledgeDraftReady: { type: "boolean" },
+    knowledgeTitle: { type: "string" },
+    knowledgeCategory: { type: "string" },
+    knowledgeContent: { type: "string" },
   },
-  required: ["reply", "escalate", "category", "priority", "subject", "summary"],
+  required: [
+    "reply",
+    "escalate",
+    "category",
+    "priority",
+    "subject",
+    "summary",
+    "knowledgeDraftReady",
+    "knowledgeTitle",
+    "knowledgeCategory",
+    "knowledgeContent",
+  ],
 });
 
 function validMessages(value: unknown): value is SupportMessage[] {
@@ -90,9 +114,9 @@ function validMessages(value: unknown): value is SupportMessage[] {
     if (message.role !== "user" && message.role !== "assistant") return false;
     if (typeof message.content !== "string") return false;
     const content = message.content.trim();
-    if (!content || content.length > 4000) return false;
+    if (!content || content.length > 9000) return false;
     total += content.length;
-    if (total > 20_000) return false;
+    if (total > 40_000) return false;
     if (message.role === "user") hasUser = true;
   }
   return hasUser;
@@ -260,6 +284,24 @@ function normalizeDecision(
       typeof parsed?.summary === "string"
         ? redactSupportSecrets(parsed.summary).trim().slice(0, 500)
         : "",
+    knowledgeDraftReady:
+      parsed?.knowledgeDraftReady === true &&
+      typeof parsed?.knowledgeTitle === "string" &&
+      Boolean(parsed.knowledgeTitle.trim()) &&
+      typeof parsed?.knowledgeContent === "string" &&
+      Boolean(parsed.knowledgeContent.trim()),
+    knowledgeTitle:
+      typeof parsed?.knowledgeTitle === "string"
+        ? redactSupportSecrets(parsed.knowledgeTitle).trim().slice(0, 180)
+        : "",
+    knowledgeCategory:
+      typeof parsed?.knowledgeCategory === "string"
+        ? redactSupportSecrets(parsed.knowledgeCategory).trim().slice(0, 80)
+        : "",
+    knowledgeContent:
+      typeof parsed?.knowledgeContent === "string"
+        ? redactSupportSecrets(parsed.knowledgeContent).trim().slice(0, 8_000)
+        : "",
   };
 }
 
@@ -274,6 +316,10 @@ function fallbackDecision(fallbackLanguage: "pt" | "en"): SupportDecision {
     priority: "normal",
     subject: fallbackLanguage === "en" ? "Support request" : "Pedido de suporte",
     summary: "",
+    knowledgeDraftReady: false,
+    knowledgeTitle: "",
+    knowledgeCategory: "",
+    knowledgeContent: "",
   };
 }
 
@@ -325,6 +371,11 @@ export async function POST(req: Request) {
   }));
   const organizationLanguage = session.language === "en" ? "en" : "pt";
   const responseLanguage = detectSupportLanguage(safeMessages, organizationLanguage);
+  const latestUserMessage = [...safeMessages]
+    .reverse()
+    .find((message) => message.role === "user")?.content ?? "";
+  const pendingKnowledgeDraft = normalizeSupportKnowledgeDraft(parsed.value.pendingKnowledgeDraft);
+
   const [organization, agent, widget, knowledge, memberUsage, supportKnowledge] = await Promise.all([
     getOrganization(session.organizationId),
     getClientAgentConfig(session.organizationId),
@@ -336,7 +387,7 @@ export async function POST(req: Request) {
 
   if (!organization) return jsonError("Organization not found.", 404);
 
-  const system = buildPortalSupportPrompt({
+  const baseSystem = buildPortalSupportPrompt({
     organization,
     role: session.role,
     agent,
@@ -348,6 +399,15 @@ export async function POST(req: Request) {
     supportKnowledgeContext: supportKnowledge.context,
     responseLanguage,
   });
+  const system = pendingKnowledgeDraft
+    ? `${baseSystem}
+
+PENDING KNOWLEDGE DRAFT
+A previously proposed draft is awaiting review. The chat UI provides a dedicated Add to Knowledge button for the actual save. Never tell the user they must type an approval command and never claim the draft was saved from a normal chat message. If the user's latest message requests a correction or supplies new facts, revise it and return the full replacement draft with knowledgeDraftReady=true. If they only want to edit but have not supplied the change yet, ask what they want to change and keep the existing draft pending.
+Title: ${pendingKnowledgeDraft.title}
+Category: ${pendingKnowledgeDraft.category}
+Content: ${pendingKnowledgeDraft.content}`
+    : baseSystem;
 
   const model = openai(process.env.OPENAI_MODEL || "gpt-5.6-luna");
   const modelMessages = safeMessages.map((message) => ({
@@ -386,9 +446,6 @@ export async function POST(req: Request) {
       decision = fallbackDecision(language);
     }
   }
-  const latestUserMessage = [...safeMessages]
-    .reverse()
-    .find((message) => message.role === "user")?.content ?? "";
   const forced = forcedEscalation(latestUserMessage, language);
 
   // This is a documented informational policy question, not a deletion request.
@@ -406,12 +463,66 @@ export async function POST(req: Request) {
       priority: "normal",
       subject: language === "en" ? "Lost lead deletion timing" : "Eliminação de lead perdida",
       summary: "",
+      knowledgeDraftReady: false,
+      knowledgeTitle: "",
+      knowledgeCategory: "",
+      knowledgeContent: "",
     };
   } else if (forced && !decision.escalate) {
     decision = {
       ...decision,
       ...forced,
       escalate: true,
+    };
+  }
+
+  if (decision.escalate) {
+    decision = {
+      ...decision,
+      knowledgeDraftReady: false,
+      knowledgeTitle: "",
+      knowledgeCategory: "",
+      knowledgeContent: "",
+    };
+  }
+
+  if (decision.knowledgeDraftReady) {
+    const category = decision.knowledgeCategory || "FAQ";
+    decision = {
+      ...decision,
+      knowledgeCategory: category,
+      reply:
+        session.role === "client_owner"
+          ? language === "en"
+            ? `I prepared the entry like this:
+
+Title: ${decision.knowledgeTitle}
+Category: ${category}
+Content: ${decision.knowledgeContent}
+
+Review it carefully. If everything is correct, use the “Add to Knowledge” button below. If you want to change anything, use “I want to edit” or write the correction.`
+            : `Preparei a entrada desta forma:
+
+Título: ${decision.knowledgeTitle}
+Categoria: ${category}
+Conteúdo: ${decision.knowledgeContent}
+
+Revê com atenção. Se estiver tudo correto, usa o botão “Adicionar à Knowledge” abaixo. Se quiseres alterar alguma coisa, usa “Quero alterar” ou escreve a correção.`
+          : language === "en"
+            ? `I prepared the entry like this:
+
+Title: ${decision.knowledgeTitle}
+Category: ${category}
+Content: ${decision.knowledgeContent}
+
+Review it carefully. Your Portal role is Member, so an Owner will need to add the approved entry to the Knowledge Base.`
+            : `Preparei a entrada desta forma:
+
+Título: ${decision.knowledgeTitle}
+Categoria: ${category}
+Conteúdo: ${decision.knowledgeContent}
+
+Revê com atenção. A tua função no Portal é Member, por isso um Owner terá de adicionar a entrada aprovada à Knowledge Base.`,
     };
   }
 
@@ -472,10 +583,32 @@ export async function POST(req: Request) {
     }
   }
 
+  const reviewedKnowledgeDraft: SupportKnowledgeDraft | null =
+    decision.knowledgeDraftReady && decision.knowledgeTitle && decision.knowledgeContent
+      ? {
+          id: crypto.randomUUID(),
+          title: decision.knowledgeTitle,
+          category: decision.knowledgeCategory || "FAQ",
+          content: decision.knowledgeContent,
+        }
+      : pendingKnowledgeDraft && !decision.escalate
+        ? pendingKnowledgeDraft
+        : null;
+
+  const knowledgeDraft = reviewedKnowledgeDraft
+    ? {
+        ...reviewedKnowledgeDraft,
+        canSave: session.role === "client_owner",
+        language,
+      }
+    : null;
+
   return Response.json(
     {
       reply: decision.reply,
       ticket,
+      knowledgeDraft,
+      knowledgeSaved: null,
     },
     {
       headers: {

@@ -932,6 +932,11 @@ input:disabled {
   .momo-sales-hero {
     min-height: max(720px, 100svh);
     padding-bottom: 130px;
+    /* Keep mobile ambience subtle. The desktop bottom-right radial can read as
+       a rectangular launcher shadow in Safari's composited fixed layers. */
+    background:
+      radial-gradient(circle at 58% 16%, rgba(255, 255, 255, 0.018), transparent 28%),
+      #030303;
   }
 
   .momo-sales-topbar {
@@ -965,20 +970,38 @@ input:disabled {
     font-size: 16px;
   }
 
+  /* Safari/iOS can rasterize this large blurred decorative layer as a
+     visible rectangle. The hero already has its own radial ambience, so on
+     mobile we remove this extra layer and keep the launcher's circular glow. */
   .momo-sales-widget-light {
-    right: -54vw;
-    bottom: -12vh;
-    width: 104vw;
-    opacity: 0.72;
-    background: radial-gradient(
-      circle at 76% 78%,
-      rgba(255, 145, 48, 0.2) 0%,
-      rgba(255, 104, 16, 0.12) 18%,
-      rgba(255, 78, 0, 0.05) 38%,
-      transparent 60%
-    );
+    display: none;
+  }
+
+  /* iOS Safari can keep :hover after a tap and rasterize the large launcher
+     shadow/filter into a visible rectangular compositing layer. On touch
+     devices use a compact circular shadow and no hover filter/transform. */
+  .momo-sales-home .momo-launcher,
+  .momo-sales-home .momo-launcher:hover,
+  .momo-sales-home .momo-launcher.is-open {
+    filter: none;
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow:
+      0 8px 20px rgba(255, 101, 5, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -8px 18px rgba(129, 38, 0, 0.14);
+  }
+
+  .momo-sales-home .momo-launcher:hover::before {
+    opacity: 0.94;
+    filter: blur(4px) saturate(1.24) contrast(1.06);
+  }
+
+  .momo-sales-home .momo-launcher:hover::after {
+    filter: none;
   }
 }
+
 
 @media (max-width: 520px) {
   .momo-sales-hero {

@@ -3,9 +3,9 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import MomoIcon from "@/components/momo/MomoIcon";
-import LauncherChatGlyph, {
-  LAUNCHER_ICON_RATIO,
-} from "@/components/momo/LauncherChatGlyph";
+import ChatActions from "@/components/momo/ChatActions";
+import type { ChatAction } from "@/lib/chat/actions";
+import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "@/components/momo/LauncherChatGlyph";
 import type { UiLanguage } from "@/lib/i18n/ui";
 
 type ChatMessage = {
@@ -18,6 +18,20 @@ type TicketInfo = {
   reference: string;
 };
 
+type KnowledgeDraft = {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  canSave: boolean;
+  language: "pt" | "en";
+};
+
+type KnowledgeSaved = {
+  id: string;
+  title: string;
+};
+
 type Props = {
   language: UiLanguage;
 };
@@ -26,8 +40,7 @@ const copy = {
   pt: {
     title: "Momo Support",
     subtitle: "Assistente de IA · 24/7",
-    intro:
-      "Olá! Sou o Momo Support. Posso ajudar-te com o portal e, se for preciso, encaminho o pedido para a equipa.",
+    intro: "Olá! Sou o Momo Support. Posso ajudar-te com o portal e, se for preciso, encaminho o pedido para a equipa.",
     placeholder: "Como posso ajudar?",
     send: "Enviar",
     close: "Fechar suporte",
@@ -43,12 +56,19 @@ const copy = {
     viewTicket: "Ver pedido",
     tickets: "Todos os pedidos",
     reset: "Nova conversa",
+    knowledgeSaved: "Entrada adicionada à Knowledge Base",
+    viewKnowledge: "Abrir Knowledge Base",
+    addKnowledge: "Adicionar à Knowledge",
+    editKnowledge: "Quero alterar",
+    ownerOnly: "Só um Owner pode adicionar entradas à Knowledge Base.",
+    knowledgeSaveError: "Não consegui adicionar a entrada agora. O rascunho continua intacto; tenta novamente dentro de momentos.",
+    knowledgeSavedReply: "Feito. Adicionei a entrada à Knowledge Base como Público + Publicado e indexei-a para o agente do website. Não precisas de reindexar manualmente.",
+    editPrefix: "Quero alterar: ",
   },
   en: {
     title: "Momo Support",
     subtitle: "AI assistant · 24/7",
-    intro:
-      "Hi, I'm Momo Support. I can help with the portal and send a request to the team when needed.",
+    intro: "Hi, I'm Momo Support. I can help with the portal and send a request to the team when needed.",
     placeholder: "How can I help?",
     send: "Send",
     close: "Close support",
@@ -64,46 +84,33 @@ const copy = {
     viewTicket: "View request",
     tickets: "All requests",
     reset: "New conversation",
+    knowledgeSaved: "Entry added to the Knowledge Base",
+    viewKnowledge: "Open Knowledge Base",
+    addKnowledge: "Add to Knowledge",
+    editKnowledge: "I want to edit",
+    ownerOnly: "Only an Owner can add Knowledge Base entries.",
+    knowledgeSaveError: "I couldn't add the entry right now. The draft is still intact; try again in a moment.",
+    knowledgeSavedReply: "Done. I added the entry to the Knowledge Base as Public + Published and indexed it for the website agent. You don't need to reindex it manually.",
+    editPrefix: "I want to change: ",
   },
 } as const;
 
+
 const SUPPORT_LAUNCHER_SIZE = 48;
+const SUPPORT_OPEN_STORAGE_KEY = "momo-support-open";
 
 function CloseIcon() {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="m7 7 10 10M17 7 7 17"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-      />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }
 
 function ResetIcon() {
   return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 8V4m0 0h4M5 4l3.2 3.2a7 7 0 1 1-1.1 8.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 8V4m0 0h4M5 4l3.2 3.2a7 7 0 1 1-1.1 8.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -111,20 +118,25 @@ function ResetIcon() {
 export default function MomoSupportChat({ language }: Props) {
   const t = copy[language];
   const [open, setOpen] = useState(false);
+  const [openStateReady, setOpenStateReady] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<TicketInfo | null>(null);
+  const [pendingKnowledgeDraft, setPendingKnowledgeDraft] = useState<KnowledgeDraft | null>(null);
+  const [knowledgeSaved, setKnowledgeSaved] = useState<KnowledgeSaved | null>(null);
+  const [knowledgeActionBusy, setKnowledgeActionBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const conversation = useMemo(() => messages.slice(-24), [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, busy, ticket]);
+  }, [messages, busy, ticket, pendingKnowledgeDraft, knowledgeSaved, knowledgeActionBusy]);
 
   useEffect(() => {
     function openSupport() {
@@ -135,26 +147,29 @@ export default function MomoSupportChat({ language }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (panelRef.current?.contains(target)) return;
-      if (launcherRef.current?.contains(target)) return;
-      setOpen(false);
+    try {
+      setOpen(window.sessionStorage.getItem(SUPPORT_OPEN_STORAGE_KEY) === "1");
+    } catch {
+      // Storage may be unavailable in restrictive browser modes.
+    } finally {
+      setOpenStateReady(true);
     }
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [open]);
+  }, []);
+
+  useEffect(() => {
+    if (!openStateReady) return;
+    try {
+      window.sessionStorage.setItem(SUPPORT_OPEN_STORAGE_KEY, open ? "1" : "0");
+    } catch {
+      // Keep the chat usable even when sessionStorage is unavailable.
+    }
+  }, [open, openStateReady]);
 
   async function submit(text: string) {
     const value = text.trim();
     if (!value || busy) return;
 
-    const nextMessages: ChatMessage[] = [
-      ...conversation,
-      { role: "user", content: value },
-    ];
+    const nextMessages: ChatMessage[] = [...conversation, { role: "user", content: value }];
     setMessages(nextMessages);
     setInput("");
     setError(null);
@@ -167,31 +182,64 @@ export default function MomoSupportChat({ language }: Props) {
         body: JSON.stringify({
           messages: nextMessages,
           activeTicketId: ticket?.id ?? null,
+          pendingKnowledgeDraft,
         }),
       });
 
-      if (!response.ok)
-        throw new Error(`Support request failed: ${response.status}`);
+      if (!response.ok) throw new Error(`Support request failed: ${response.status}`);
       const payload = (await response.json()) as {
         reply?: unknown;
         ticket?: { id?: unknown; reference?: unknown } | null;
+        knowledgeDraft?: {
+          id?: unknown;
+          title?: unknown;
+          category?: unknown;
+          content?: unknown;
+          canSave?: unknown;
+          language?: unknown;
+        } | null;
+        knowledgeSaved?: { id?: unknown; title?: unknown } | null;
       };
-      const reply =
-        typeof payload.reply === "string" ? payload.reply.trim() : "";
+      const reply = typeof payload.reply === "string" ? payload.reply.trim() : "";
       if (!reply) throw new Error("Missing support reply");
 
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: reply },
-      ]);
+      setMessages((current) => [...current, { role: "assistant", content: reply }]);
       if (
         payload.ticket &&
         typeof payload.ticket.id === "string" &&
         typeof payload.ticket.reference === "string"
       ) {
-        setTicket({
-          id: payload.ticket.id,
-          reference: payload.ticket.reference,
+        setTicket({ id: payload.ticket.id, reference: payload.ticket.reference });
+      }
+
+      if (
+        payload.knowledgeDraft &&
+        typeof payload.knowledgeDraft.id === "string" &&
+        typeof payload.knowledgeDraft.title === "string" &&
+        typeof payload.knowledgeDraft.category === "string" &&
+        typeof payload.knowledgeDraft.content === "string"
+      ) {
+        setPendingKnowledgeDraft({
+          id: payload.knowledgeDraft.id,
+          title: payload.knowledgeDraft.title,
+          category: payload.knowledgeDraft.category,
+          content: payload.knowledgeDraft.content,
+          canSave: payload.knowledgeDraft.canSave === true,
+          language: payload.knowledgeDraft.language === "en" ? "en" : "pt",
+        });
+        setKnowledgeSaved(null);
+      } else {
+        setPendingKnowledgeDraft(null);
+      }
+
+      if (
+        payload.knowledgeSaved &&
+        typeof payload.knowledgeSaved.id === "string" &&
+        typeof payload.knowledgeSaved.title === "string"
+      ) {
+        setKnowledgeSaved({
+          id: payload.knowledgeSaved.id,
+          title: payload.knowledgeSaved.title,
         });
       }
     } catch (reason) {
@@ -199,6 +247,52 @@ export default function MomoSupportChat({ language }: Props) {
       setError(t.error);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function savePendingKnowledgeDraft() {
+    if (!pendingKnowledgeDraft || !pendingKnowledgeDraft.canSave || knowledgeActionBusy) return;
+
+    setKnowledgeActionBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/portal/support/knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save", draft: pendingKnowledgeDraft }),
+      });
+
+      if (!response.ok) throw new Error(`Knowledge action failed: ${response.status}`);
+      const payload = (await response.json()) as {
+        saved?: { id?: unknown; title?: unknown } | null;
+      };
+      if (!payload.saved || typeof payload.saved.id !== "string" || typeof payload.saved.title !== "string") {
+        throw new Error("Missing saved Knowledge entry");
+      }
+
+      const reply = pendingKnowledgeDraft.language === "en"
+        ? copy.en.knowledgeSavedReply
+        : copy.pt.knowledgeSavedReply;
+      setMessages((current) => [...current, { role: "assistant", content: reply }]);
+      setKnowledgeSaved({ id: payload.saved.id, title: payload.saved.title });
+      setPendingKnowledgeDraft(null);
+    } catch (reason) {
+      console.error(reason);
+      setError(t.knowledgeSaveError);
+    } finally {
+      setKnowledgeActionBusy(false);
+    }
+  }
+
+  function handleKnowledgeAction(action: ChatAction) {
+    if (action.id === "knowledge-save") {
+      void savePendingKnowledgeDraft();
+      return;
+    }
+
+    if (action.id === "knowledge-edit") {
+      setInput((current) => current.trim() ? current : (action.value ?? t.editPrefix));
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   }
 
@@ -210,6 +304,8 @@ export default function MomoSupportChat({ language }: Props) {
   function resetConversation() {
     setMessages([]);
     setTicket(null);
+    setPendingKnowledgeDraft(null);
+    setKnowledgeSaved(null);
     setInput("");
     setError(null);
   }
@@ -219,7 +315,7 @@ export default function MomoSupportChat({ language }: Props) {
       {open && (
         <section
           ref={panelRef}
-          className="fixed bottom-23 right-4 z-70 flex h-[min(620px,calc(100vh-116px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-white/9 bg-[#151515]/98 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:right-7"
+          className="fixed bottom-[92px] right-4 z-[70] flex h-[min(620px,calc(100vh-116px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-white/[0.09] bg-[#151515]/98 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:right-7"
         >
           <header className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3.5">
             <div className="flex items-center gap-2.5">
@@ -253,7 +349,7 @@ export default function MomoSupportChat({ language }: Props) {
           <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
             <div className="flex gap-2.5">
               <MomoIcon size={27} />
-              <div className="max-w-[84%] rounded-[18px] rounded-bl-md border border-white/6 bg-white/5.5 px-3.5 py-2.5 text-[13px] leading-5 text-white/85">
+              <div className="max-w-[84%] rounded-[18px] rounded-bl-md border border-white/[0.06] bg-white/[0.055] px-3.5 py-2.5 text-[13px] leading-5 text-white/85">
                 {t.intro}
               </div>
             </div>
@@ -265,7 +361,7 @@ export default function MomoSupportChat({ language }: Props) {
                     key={quick}
                     type="button"
                     onClick={() => void submit(quick)}
-                    className="rounded-full border border-white/8 bg-white/[0.035] px-3 py-1.5 text-left text-[11px] text-white/60 transition hover:border-[#ff7a18]/35 hover:text-white"
+                    className="rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-1.5 text-left text-[11px] text-white/60 transition hover:border-[#ff7a18]/35 hover:text-white"
                   >
                     {quick}
                   </button>
@@ -274,16 +370,13 @@ export default function MomoSupportChat({ language }: Props) {
             )}
 
             {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`flex ${message.role === "user" ? "justify-end" : "gap-2.5"}`}
-              >
+              <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "gap-2.5"}`}>
                 {message.role === "assistant" && <MomoIcon size={27} />}
                 <div
                   className={`max-w-[84%] whitespace-pre-wrap rounded-[18px] px-3.5 py-2.5 text-[13px] leading-5 ${
                     message.role === "user"
                       ? "rounded-br-md bg-[#ff7a18] text-[#16110d]"
-                      : "rounded-bl-md border border-white/6 bg-white/5.5 text-white/85"
+                      : "rounded-bl-md border border-white/[0.06] bg-white/[0.055] text-white/85"
                   }`}
                 >
                   {message.content}
@@ -291,10 +384,39 @@ export default function MomoSupportChat({ language }: Props) {
               </div>
             ))}
 
+            {pendingKnowledgeDraft && (
+              <div className="pl-9">
+                <ChatActions
+                  busy={knowledgeActionBusy || busy}
+                  actions={[
+                    {
+                      id: "knowledge-save",
+                      label: t.addKnowledge,
+                      kind: "command",
+                      variant: "primary",
+                      disabled: !pendingKnowledgeDraft.canSave,
+                      disabledReason: !pendingKnowledgeDraft.canSave ? t.ownerOnly : undefined,
+                    },
+                    {
+                      id: "knowledge-edit",
+                      label: t.editKnowledge,
+                      kind: "compose",
+                      value: t.editPrefix,
+                      variant: "secondary",
+                    },
+                  ]}
+                  onAction={handleKnowledgeAction}
+                />
+                {!pendingKnowledgeDraft.canSave && (
+                  <p className="mt-2 text-[11px] leading-4 text-white/35">{t.ownerOnly}</p>
+                )}
+              </div>
+            )}
+
             {busy && (
               <div className="flex items-center gap-2.5">
                 <MomoIcon size={27} />
-                <div className="flex gap-1.5 rounded-[18px] rounded-bl-md border border-white/6 bg-white/5 px-3.5 py-3.5">
+                <div className="flex gap-1.5 rounded-[18px] rounded-bl-md border border-white/[0.06] bg-white/[0.05] px-3.5 py-3.5">
                   {[0, 1, 2].map((dot) => (
                     <span
                       key={dot}
@@ -307,49 +429,48 @@ export default function MomoSupportChat({ language }: Props) {
             )}
 
             {error && (
-              <div className="rounded-xl border border-amber-300/15 bg-amber-300/5 px-3 py-2.5 text-xs leading-5 text-amber-100/75">
+              <div className="rounded-xl border border-amber-300/15 bg-amber-300/[0.05] px-3 py-2.5 text-xs leading-5 text-amber-100/75">
                 {error}
               </div>
             )}
 
             {ticket && (
-              <div className="rounded-2xl border border-[#ff7a18]/20 bg-[#ff7a18]/6 p-3.5">
-                <p className="text-xs font-semibold text-[#ff9b50]">
-                  {t.ticket}
-                </p>
-                <p className="mt-1 text-sm font-medium text-white">
-                  {ticket.reference}
-                </p>
+              <div className="rounded-2xl border border-[#ff7a18]/20 bg-[#ff7a18]/[0.06] p-3.5">
+                <p className="text-xs font-semibold text-[#ff9b50]">{t.ticket}</p>
+                <p className="mt-1 text-sm font-medium text-white">{ticket.reference}</p>
                 <div className="mt-3 flex gap-2">
-                  <Link
-                    href={`/portal/support/${ticket.id}`}
-                    className="rounded-lg bg-[#ff7a18] px-3 py-2 text-xs font-semibold text-[#17110d] transition hover:bg-[#ff9348]"
-                  >
+                  <Link href={`/portal/support/${ticket.id}`} className="rounded-lg bg-[#ff7a18] px-3 py-2 text-xs font-semibold text-[#17110d] transition hover:bg-[#ff9348]">
                     {t.viewTicket}
                   </Link>
-                  <Link
-                    href="/portal/support"
-                    className="rounded-lg border border-white/8 px-3 py-2 text-xs text-white/55 transition hover:bg-white/5 hover:text-white"
-                  >
+                  <Link href="/portal/support" className="rounded-lg border border-white/[0.08] px-3 py-2 text-xs text-white/55 transition hover:bg-white/[0.05] hover:text-white">
                     {t.tickets}
                   </Link>
                 </div>
               </div>
             )}
 
+            {knowledgeSaved && (
+              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.055] p-3.5">
+                <p className="text-xs font-semibold text-emerald-200/90">{t.knowledgeSaved}</p>
+                <p className="mt-1 text-sm font-medium text-white/90">{knowledgeSaved.title}</p>
+                <Link
+                  href="/portal/knowledge"
+                  className="mt-3 inline-flex rounded-lg border border-white/[0.1] px-3 py-2 text-xs text-white/65 transition hover:bg-white/[0.05] hover:text-white"
+                >
+                  {t.viewKnowledge}
+                </Link>
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
 
-          <form
-            onSubmit={onSubmit}
-            className="border-t border-white/[0.07] p-3"
-          >
-            <div className="flex items-end gap-2 rounded-2xl border border-white/8 bg-white/4 p-2 focus-within:border-[#ff7a18]/30">
+          <form onSubmit={onSubmit} className="border-t border-white/[0.07] p-3">
+            <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 focus-within:border-[#ff7a18]/30">
               <textarea
+                ref={inputRef}
                 value={input}
-                onChange={(event) =>
-                  setInput(event.target.value.slice(0, 3500))
-                }
+                onChange={(event) => setInput(event.target.value.slice(0, 3500))}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -362,7 +483,7 @@ export default function MomoSupportChat({ language }: Props) {
               />
               <button
                 type="submit"
-                disabled={busy || !input.trim()}
+                disabled={busy || knowledgeActionBusy || !input.trim()}
                 className="rounded-xl bg-[#ff7a18] px-3 py-2.5 text-xs font-semibold text-[#18110c] transition hover:bg-[#ff9348] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {t.send}
@@ -377,19 +498,12 @@ export default function MomoSupportChat({ language }: Props) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label={open ? t.close : t.open}
-        className="fixed bottom-5 right-5 z-70 flex items-center gap-2 rounded-full border border-white/10 bg-[#151515]/95 py-1 pl-1 pr-3 shadow-[0_16px_45px_rgba(0,0,0,0.42)] transition duration-200 hover:-translate-y-0.5 hover:border-[#ff7a18]/30 sm:right-7"
+        className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full border border-white/[0.1] bg-[#151515]/95 py-1 pl-1 pr-3 shadow-[0_16px_45px_rgba(0,0,0,0.42)] transition duration-200 hover:-translate-y-0.5 hover:border-[#ff7a18]/30 sm:right-7"
       >
-        <span
-          className={`momo-launcher momo-support-launcher-orb ${open ? "is-open" : ""}`}
-          aria-hidden="true"
-        >
+        <span className={`momo-launcher momo-support-launcher-orb ${open ? "is-open" : ""}`} aria-hidden="true">
           <span className="momo-launcher-glow" />
           <span className="momo-launcher-highlight" />
-          <span className="momo-launcher-icon">
-            <LauncherChatGlyph
-              size={SUPPORT_LAUNCHER_SIZE * LAUNCHER_ICON_RATIO}
-            />
-          </span>
+          <span className="momo-launcher-icon"><LauncherChatGlyph size={SUPPORT_LAUNCHER_SIZE * LAUNCHER_ICON_RATIO} /></span>
         </span>
         <span className="text-xs font-medium text-white/75">Support</span>
       </button>

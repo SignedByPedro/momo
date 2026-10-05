@@ -11,9 +11,7 @@ import {
   type CSSProperties,
 } from "react";
 import ClientAgentAvatar from "@/components/widget/ClientAgentAvatar";
-import LauncherChatGlyph, {
-  LAUNCHER_ICON_RATIO,
-} from "@/components/momo/LauncherChatGlyph";
+import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "@/components/momo/LauncherChatGlyph";
 import type {
   ClientWidgetConfig,
   WidgetAvatarStyle,
@@ -167,6 +165,7 @@ export default function EmbeddedClientWidget({
   widgetConfig,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [openStateReady, setOpenStateReady] = useState(false);
   const [panelVisible, setPanelVisible] = useState(false);
   const [launcherHovered, setLauncherHovered] = useState(false);
   const [input, setInput] = useState("");
@@ -175,19 +174,17 @@ export default function EmbeddedClientWidget({
   const panelRef = useRef<HTMLElement>(null);
   const launcherRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, error, setMessages, clearError } =
-    useChat({
-      transport: new DefaultChatTransport({
-        api: `/api/widget/${encodeURIComponent(publicKey)}/chat`,
-        fetch: chatApiFetch,
-      }),
-    });
+  const { messages, sendMessage, status, error, setMessages, clearError } = useChat({
+    transport: new DefaultChatTransport({
+      api: `/api/widget/${encodeURIComponent(publicKey)}/chat`,
+      fetch: chatApiFetch,
+    }),
+  });
 
   const busy = status === "submitted" || status === "streaming";
   const errorCode = chatErrorCode(error);
   const requiresNewChat =
-    errorCode === "chat_message_limit" ||
-    errorCode === "conversation_too_large";
+    errorCode === "chat_message_limit" || errorCode === "conversation_too_large";
   const isLight = useMemo(
     () => luminance(widgetConfig.panel_background) > 0.48,
     [widgetConfig.panel_background],
@@ -204,11 +201,8 @@ export default function EmbeddedClientWidget({
   const accentText = accentIsLight ? "#151515" : "#ffffff";
   const launcherPx = sizePixels(widgetConfig.launcher_size);
   const automaticHoverLabel =
-    primaryLanguage === "en"
-      ? `Chat with ${agentName}`
-      : `Falar com ${agentName}`;
-  const hoverLabel =
-    widgetConfig.hover_label_text?.trim() || automaticHoverLabel;
+    primaryLanguage === "en" ? `Chat with ${agentName}` : `Falar com ${agentName}`;
+  const hoverLabel = widgetConfig.hover_label_text?.trim() || automaticHoverLabel;
   const showHoverLabel = widgetConfig.hover_label_enabled && !open;
 
   const launcherStyle = {
@@ -218,6 +212,28 @@ export default function EmbeddedClientWidget({
     width: launcherPx,
     height: launcherPx,
   } as CSSProperties;
+
+  useEffect(() => {
+    try {
+      setOpen(window.sessionStorage.getItem(`momo-client-widget-open:${publicKey}`) === "1");
+    } catch {
+      // Storage may be unavailable in restrictive browser modes.
+    } finally {
+      setOpenStateReady(true);
+    }
+  }, [publicKey]);
+
+  useEffect(() => {
+    if (!openStateReady) return;
+    try {
+      window.sessionStorage.setItem(
+        `momo-client-widget-open:${publicKey}`,
+        open ? "1" : "0",
+      );
+    } catch {
+      // Keep the widget usable even when sessionStorage is unavailable.
+    }
+  }, [open, openStateReady, publicKey]);
 
   useEffect(() => {
     window.parent.postMessage(
@@ -265,42 +281,12 @@ export default function EmbeddedClientWidget({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (panelRef.current?.contains(target)) return;
-      if (launcherRef.current?.contains(target)) return;
-      setPanelVisible(false);
-      setOpen(false);
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [open]);
-
-  useEffect(() => {
-    function handleParentMessage(event: MessageEvent) {
-      if (event.source !== window.parent) return;
-      const data = event.data;
-      if (!data || data.type !== "momo:close-widget" || data.key !== publicKey)
-        return;
-      setPanelVisible(false);
-      setOpen(false);
-    }
-
-    window.addEventListener("message", handleParentMessage);
-    return () => window.removeEventListener("message", handleParentMessage);
-  }, [publicKey]);
 
   async function submit(text: string) {
     const value = text.trim();
     if (!value || busy) return;
     setInput("");
-    if (!conversationIdRef.current)
-      conversationIdRef.current = crypto.randomUUID();
+    if (!conversationIdRef.current) conversationIdRef.current = crypto.randomUUID();
     await sendMessage(
       { text: value },
       { body: { conversationId: conversationIdRef.current } },
@@ -338,7 +324,7 @@ export default function EmbeddedClientWidget({
       {open && panelVisible && (
         <section
           ref={panelRef}
-          className={`client-widget-panel absolute bottom-23 flex max-h-[calc(100vh-108px)] max-w-[calc(100vw-20px)] flex-col overflow-hidden border ${
+          className={`client-widget-panel absolute bottom-[92px] flex max-h-[calc(100vh-108px)] max-w-[calc(100vw-20px)] flex-col overflow-hidden border ${
             widgetConfig.position === "right" ? "right-2.5" : "left-2.5"
           }`}
           style={{
@@ -374,23 +360,16 @@ export default function EmbeddedClientWidget({
                       boxShadow: `0 0 9px ${widgetConfig.primary_color}`,
                     }}
                   />
-                  {primaryLanguage === "en"
-                    ? "AI assistant"
-                    : "Assistente de IA"}
+                  {primaryLanguage === "en" ? "AI assistant" : "Assistente de IA"}
                 </p>
               </div>
             </div>
             <button
               type="button"
-              onClick={() => {
-                setPanelVisible(false);
-                setOpen(false);
-              }}
+              onClick={() => { setPanelVisible(false); setOpen(false); }}
               className="grid h-8 w-8 place-items-center rounded-full text-lg transition hover:opacity-70"
               style={{ color: muted }}
-              aria-label={
-                primaryLanguage === "en" ? "Close chat" : "Fechar chat"
-              }
+              aria-label={primaryLanguage === "en" ? "Close chat" : "Fechar chat"}
             >
               ×
             </button>
@@ -401,11 +380,7 @@ export default function EmbeddedClientWidget({
               {avatar(28)}
               <div
                 className="max-w-[84%] whitespace-pre-wrap rounded-2xl rounded-bl-md border px-3.5 py-2.5 text-sm leading-5"
-                style={{
-                  background: surface,
-                  borderColor: border,
-                  color: foreground,
-                }}
+                style={{ background: surface, borderColor: border, color: foreground }}
               >
                 {welcomeMessage}
               </div>
@@ -456,10 +431,7 @@ export default function EmbeddedClientWidget({
                     <span
                       key={dot}
                       className="momo-typing-dot h-1.5 w-1.5 rounded-full"
-                      style={{
-                        background: muted,
-                        animationDelay: `${dot * 150}ms`,
-                      }}
+                      style={{ background: muted, animationDelay: `${dot * 150}ms` }}
                     />
                   ))}
                 </div>
@@ -487,9 +459,7 @@ export default function EmbeddedClientWidget({
                       color: foreground,
                     }}
                   >
-                    {primaryLanguage === "en"
-                      ? "Start new chat"
-                      : "Começar novo chat"}
+                    {primaryLanguage === "en" ? "Start new chat" : "Começar novo chat"}
                   </button>
                 )}
               </div>
@@ -534,17 +504,12 @@ export default function EmbeddedClientWidget({
                 style={{
                   background: `linear-gradient(135deg, ${widgetConfig.secondary_color}, ${widgetConfig.primary_color})`,
                 }}
-                aria-label={
-                  primaryLanguage === "en" ? "Send message" : "Enviar mensagem"
-                }
+                aria-label={primaryLanguage === "en" ? "Send message" : "Enviar mensagem"}
               >
                 ↑
               </button>
             </div>
-            <p
-              className="mt-2 truncate text-center text-[9px]"
-              style={{ color: muted }}
-            >
+            <p className="mt-2 truncate text-center text-[9px]" style={{ color: muted }}>
               {organizationName}
             </p>
           </form>
@@ -559,30 +524,17 @@ export default function EmbeddedClientWidget({
       >
         <button
           type="button"
-          onClick={() => {
-            if (open) setPanelVisible(false);
-            setOpen(!open);
-          }}
-          aria-label={
-            open
-              ? primaryLanguage === "en"
-                ? `Close ${agentName}`
-                : `Fechar ${agentName}`
-              : primaryLanguage === "en"
-                ? `Open ${agentName}`
-                : `Abrir ${agentName}`
-          }
+          onClick={() => { if (open) setPanelVisible(false); setOpen(!open); }}
+          aria-label={open ? (primaryLanguage === "en" ? `Close ${agentName}` : `Fechar ${agentName}`) : (primaryLanguage === "en" ? `Open ${agentName}` : `Abrir ${agentName}`)}
           aria-expanded={open}
           className={`client-widget-launcher ${
-            widgetConfig.launcher_style === "image" &&
-            widgetConfig.launcher_image_url
+            widgetConfig.launcher_style === "image" && widgetConfig.launcher_image_url
               ? "client-widget-launcher--image"
               : ""
           }`}
           style={launcherStyle}
         >
-          {widgetConfig.launcher_style === "image" &&
-          widgetConfig.launcher_image_url ? (
+          {widgetConfig.launcher_style === "image" && widgetConfig.launcher_image_url ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -591,23 +543,15 @@ export default function EmbeddedClientWidget({
                 draggable={false}
                 className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
               />
-              {open && (
-                <span
-                  className="absolute inset-0 bg-black/35"
-                  aria-hidden="true"
-                />
-              )}
+              {open && <span className="absolute inset-0 bg-black/35" aria-hidden="true" />}
             </>
           ) : (
             <span className="client-widget-launcher-shine" aria-hidden="true" />
           )}
           <span className="relative z-10 grid place-items-center">
             {open ? (
-              <span className="text-xl font-light text-white drop-shadow-md">
-                ×
-              </span>
-            ) : widgetConfig.launcher_style === "image" &&
-              widgetConfig.launcher_image_url ? null : (
+              <span className="text-xl font-light text-white drop-shadow-md">×</span>
+            ) : widgetConfig.launcher_style === "image" && widgetConfig.launcher_image_url ? null : (
               <LauncherAvatar
                 key={`${widgetConfig.avatar_style}:${widgetConfig.avatar_url ?? ""}`}
                 name={agentName}
