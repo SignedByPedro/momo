@@ -14,6 +14,7 @@ export default function AdminNav({
     <nav className="flex items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.07] bg-white/[0.025] p-1 text-sm">
       <Link className={itemClass} href="/admin">Leads</Link>
       <Link className={itemClass} href="/admin/clients">{tr(language, "Clientes", "Clients")}</Link>
+      <Link className={itemClass} href="/admin/tester">Tester</Link>
       <Link className={itemClass} href="/admin/conversations">{tr(language, "Conversas", "Conversations")}</Link>
       <Link className={itemClass} href="/admin/knowledge">{tr(language, "Conhecimento", "Knowledge")}</Link>
       <Link className={`${itemClass} relative`} href="/admin/support">

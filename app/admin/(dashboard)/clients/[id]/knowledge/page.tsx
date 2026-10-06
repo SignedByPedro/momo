@@ -52,6 +52,12 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/tester?client=${id}`}
+            className="rounded-xl border border-[#ff7a18]/25 bg-[#ff7a18]/[0.05] px-4 py-2.5 text-sm text-[#ff9a4d] transition hover:bg-[#ff7a18]/[0.1]"
+          >
+            Testar agente
+          </Link>
           <form action={reindexClientKnowledge}>
             <input type="hidden" name="organizationId" value={id} />
             <FormSubmitButton className="rounded-xl border border-white/[0.09] px-4 py-2.5 text-sm text-white/65 transition hover:border-[#ff7a18]/30 hover:text-[#ff9a4d]">
