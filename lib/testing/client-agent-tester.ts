@@ -66,6 +66,28 @@ export type TesterReport = {
   recommendations: string[];
 };
 
+export type TesterKnowledgeActionEntry = {
+  title: string;
+  category: string;
+  content: string;
+};
+
+export type TesterKnowledgeAction = {
+  id: string;
+  type: "split" | "create" | "delete";
+  title: string;
+  rationale: string;
+  targetEntryId: string | null;
+  sourceEntryIds: string[];
+  sourceVersions: Array<{
+    id: string;
+    title: string;
+    updatedAt: string;
+    sourceType: "manual" | "website";
+  }>;
+  entries: TesterKnowledgeActionEntry[];
+};
+
 function stripCodeFence(value: string) {
   const trimmed = value.trim();
   if (!trimmed.startsWith("```")) return trimmed;
@@ -243,6 +265,7 @@ ${compactKnowledge(allPublishedEntries, 70000)}`,
 export async function evaluateTesterRun(args: {
   organization: OrganizationRow;
   allPublishedEntries: ClientKnowledgeEntry[];
+  actionableEntryIds: string[];
   cases: Array<TesterQuestionPlan & { answer: string; retrievedEntryIds: string[] }>;
   conversations: Array<{
     title: string;
@@ -250,7 +273,7 @@ export async function evaluateTesterRun(args: {
     turns: Array<TesterConversationTurnPlan & { answer: string; retrievedEntryIds: string[] }>;
   }>;
 }) {
-  const { organization, allPublishedEntries, cases, conversations } = args;
+  const { organization, allPublishedEntries, actionableEntryIds, cases, conversations } = args;
   const model = openai(process.env.OPENAI_TESTER_MODEL || process.env.OPENAI_MODEL || "gpt-5.6-luna");
   const language = organization.primary_language === "en" ? "English" : "European Portuguese";
   const knowledgeById = new Map(allPublishedEntries.map((entry) => [entry.id, entry]));
@@ -304,25 +327,37 @@ EVALUATION STANDARD
 - Keep each per-case/per-turn reason and expected-answer summary concise, ideally one or two sentences.
 - Write all reasons, expected-answer summaries and the final report in ${language}.
 
+KNOWLEDGE IMPROVEMENT ACTIONS
+After judging the run, you may propose concrete Knowledge Base changes when the test evidence and approved Knowledge clearly justify them. These are suggestions for an administrator to review, not automatic edits.
+- split: use when ONE existing entry mixes independent topics that visitors are likely to ask separately. targetEntryId must be that entry. Propose 2-4 replacement entries. Preserve every material fact, condition and exception from the original; add nothing and remove nothing. Do NOT split a rule from an exception needed to understand the same policy.
+- create: use only when a useful standalone entry can be created entirely by reorganizing facts that already exist in sourceEntryIds. Never manufacture missing company information. If a needed fact is genuinely absent, mention it only in report.recommendations instead of proposing create.
+- delete: use only for an entry that is genuinely redundant/duplicated and whose material information is fully preserved by sourceEntryIds. targetEntryId is the redundant entry. Never propose deletion merely because an entry is poorly worded or caused a failed test.
+- Every sentence in proposed entries must be supported by the approved Knowledge supplied here.
+- Keep proposals conservative. It is valid to return no actions. Maximum 6 actions.
+
 Return ONLY valid JSON using this schema:
-{"cases":[{"index":0,"status":"pass|warning|fail","score":0,"reason":"...","expected":"..."}],"conversations":[{"index":0,"status":"pass|warning|fail","score":0,"reason":"overall continuity assessment","turns":[{"turnIndex":0,"status":"pass|warning|fail","score":0,"reason":"...","expected":"..."}]}],"report":{"score":0,"verdict":"excellent|good|needs_attention|poor","summary":"...","strengths":["..."],"issues":["..."],"recommendations":["..."]}}`,
+{"cases":[{"index":0,"status":"pass|warning|fail","score":0,"reason":"...","expected":"..."}],"conversations":[{"index":0,"status":"pass|warning|fail","score":0,"reason":"overall continuity assessment","turns":[{"turnIndex":0,"status":"pass|warning|fail","score":0,"reason":"...","expected":"..."}]}],"report":{"score":0,"verdict":"excellent|good|needs_attention|poor","summary":"...","strengths":["..."],"issues":["..."],"recommendations":["..."]},"knowledgeActions":[{"type":"split|create|delete","title":"short action title","rationale":"why this improves QA/retrieval","targetEntryId":"uuid or null","sourceEntryIds":["uuid"],"entries":[{"title":"...","category":"...","content":"..."}]}]}`,
     prompt: `ORGANIZATION: ${organization.name}
 
 FULL APPROVED PUBLIC KNOWLEDGE
 ${compactKnowledge(allPublishedEntries, 75000)}
+
+KNOWLEDGE ENTRIES SELECTED FOR THIS TEST (only these may be the direct target of split/delete; create must use at least one of these as a factual source)
+${actionableEntryIds.join(", ")}
 
 STANDALONE TEST CASES
 ${JSON.stringify(casePayload)}
 
 CONTINUOUS CONVERSATIONS
 ${JSON.stringify(conversationPayload)}`,
-    maxOutputTokens: 12000,
+    maxOutputTokens: 16000,
   });
 
   const parsed = parseJsonObject<{
     cases?: Array<Record<string, unknown>>;
     conversations?: Array<Record<string, unknown>>;
     report?: Record<string, unknown>;
+    knowledgeActions?: Array<Record<string, unknown>>;
   }>(response.text);
 
   const clampScore = (value: unknown, fallback: number) => typeof value === "number" && Number.isFinite(value)
@@ -417,5 +452,66 @@ ${JSON.stringify(conversationPayload)}`,
     recommendations: stringArray(rawReport.recommendations),
   };
 
-  return { cases: evaluatedCases, conversations: evaluatedConversations, report };
+  const allEntryIds = new Set(allPublishedEntries.map((entry) => entry.id));
+  const actionableIds = new Set(actionableEntryIds.filter((id) => allEntryIds.has(id)));
+  const normalizeExistingIds = (value: unknown, max = 6) => Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string" && allEntryIds.has(id)).slice(0, max)
+    : [];
+  const normalizeActionEntries = (value: unknown) => Array.isArray(value)
+    ? value.flatMap((raw): TesterKnowledgeActionEntry[] => {
+      if (!raw || typeof raw !== "object") return [];
+      const row = raw as Record<string, unknown>;
+      const title = typeof row.title === "string" ? row.title.trim().slice(0, 180) : "";
+      const category = typeof row.category === "string" ? row.category.trim().slice(0, 80) : "";
+      const content = typeof row.content === "string" ? row.content.trim().slice(0, 8000) : "";
+      if (!title || !content) return [];
+      return [{ title, category: category || "FAQ", content }];
+    }).slice(0, 4)
+    : [];
+
+  const knowledgeActions: TesterKnowledgeAction[] = [];
+  for (const raw of Array.isArray(parsed.knowledgeActions) ? parsed.knowledgeActions : []) {
+    if (!raw || typeof raw !== "object") continue;
+    const row = raw as Record<string, unknown>;
+    const type = row.type === "split" || row.type === "create" || row.type === "delete" ? row.type : null;
+    if (!type) continue;
+
+    const targetEntryId = typeof row.targetEntryId === "string" && allEntryIds.has(row.targetEntryId)
+      ? row.targetEntryId
+      : null;
+    const sourceEntryIds = normalizeExistingIds(row.sourceEntryIds);
+    const entries = normalizeActionEntries(row.entries);
+
+    if (type === "split" && (!targetEntryId || !actionableIds.has(targetEntryId) || entries.length < 2)) continue;
+    if (type === "create" && (sourceEntryIds.length < 1 || !sourceEntryIds.some((id) => actionableIds.has(id)) || entries.length < 1)) continue;
+    if (type === "delete" && (!targetEntryId || !actionableIds.has(targetEntryId) || sourceEntryIds.length < 1 || sourceEntryIds.includes(targetEntryId))) continue;
+
+    const referencedIds = Array.from(new Set([targetEntryId, ...sourceEntryIds].filter((id): id is string => Boolean(id))));
+    const sourceVersions = referencedIds.flatMap((id) => {
+      const entry = knowledgeById.get(id);
+      return entry ? [{
+        id: entry.id,
+        title: entry.title,
+        updatedAt: entry.updated_at,
+        sourceType: entry.source_type,
+      }] : [];
+    });
+    if (sourceVersions.length !== referencedIds.length) continue;
+
+    knowledgeActions.push({
+      id: crypto.randomUUID(),
+      type,
+      title: typeof row.title === "string" && row.title.trim()
+        ? row.title.trim().slice(0, 180)
+        : type === "split" ? "Dividir entrada" : type === "create" ? "Criar entrada" : "Apagar entrada redundante",
+      rationale: typeof row.rationale === "string" ? row.rationale.trim().slice(0, 1800) : "Melhoria sugerida pelo Tester após analisar as respostas do agente.",
+      targetEntryId,
+      sourceEntryIds,
+      sourceVersions,
+      entries: type === "delete" ? [] : entries,
+    });
+    if (knowledgeActions.length >= 6) break;
+  }
+
+  return { cases: evaluatedCases, conversations: evaluatedConversations, report, knowledgeActions };
 }

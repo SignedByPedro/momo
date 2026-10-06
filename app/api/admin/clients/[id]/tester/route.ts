@@ -244,6 +244,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const evaluated = await evaluateTesterRun({
       organization: clientOrganization,
       allPublishedEntries,
+      actionableEntryIds: selectedEntries.map((entry) => entry.id),
       cases: answered,
       conversations: answeredConversations,
     });

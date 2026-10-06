@@ -59,6 +59,28 @@ type TesterConversation = {
   turns: TesterConversationTurn[];
 };
 
+type TesterKnowledgeActionEntry = {
+  title: string;
+  category: string;
+  content: string;
+};
+
+type TesterKnowledgeAction = {
+  id: string;
+  type: "split" | "create" | "delete";
+  title: string;
+  rationale: string;
+  targetEntryId: string | null;
+  sourceEntryIds: string[];
+  sourceVersions: Array<{
+    id: string;
+    title: string;
+    updatedAt: string;
+    sourceType: "manual" | "website";
+  }>;
+  entries: TesterKnowledgeActionEntry[];
+};
+
 type TesterResult = {
   organization: { id: string; name: string };
   scope: {
@@ -72,6 +94,7 @@ type TesterResult = {
   stats: { pass: number; warning: number; fail: number };
   cases: TesterCase[];
   conversations: TesterConversation[];
+  knowledgeActions: TesterKnowledgeAction[];
   report: {
     score: number;
     verdict: "excellent" | "good" | "needs_attention" | "poor";
@@ -119,6 +142,8 @@ export default function TesterClient({ clients, initialClientId = "" }: { client
   const [error, setError] = useState("");
   const [result, setResult] = useState<TesterResult | null>(null);
   const [filter, setFilter] = useState<"all" | "warning" | "fail">("all");
+  const [applyingActionId, setApplyingActionId] = useState("");
+  const [actionMessages, setActionMessages] = useState<Record<string, { ok: boolean; message: string }>>({});
 
   useEffect(() => {
     setMeta(null);
@@ -126,6 +151,8 @@ export default function TesterClient({ clients, initialClientId = "" }: { client
     setUseAll(true);
     setResult(null);
     setError("");
+    setApplyingActionId("");
+    setActionMessages({});
     if (!clientId) return;
 
     let cancelled = false;
@@ -192,6 +219,56 @@ export default function TesterClient({ clients, initialClientId = "" }: { client
       setError(reason instanceof Error ? reason.message : "Não foi possível concluir o teste.");
     } finally {
       setRunning(false);
+    }
+  }
+
+  async function refreshKnowledgeMeta() {
+    if (!clientId) return;
+    const response = await fetch(`/api/admin/clients/${clientId}/tester`, { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return;
+    const nextMeta = data as TesterMeta;
+    setMeta(nextMeta);
+    const availableIds = new Set(nextMeta.entries.map((entry) => entry.id));
+    setSelectedIds((current) => current.filter((id) => availableIds.has(id)));
+  }
+
+  async function applyKnowledgeAction(action: TesterKnowledgeAction) {
+    if (!clientId || applyingActionId) return;
+
+    const verb = action.type === "split" ? "dividir esta entrada" : action.type === "create" ? "criar esta Knowledge" : "apagar esta entrada";
+    const warning = action.type === "delete"
+      ? "Esta ação apaga a entrada selecionada. A informação só deve ser removida se estiver realmente coberta pelas entradas indicadas."
+      : "A alteração será aplicada diretamente à Knowledge Base e as novas entradas serão indexadas.";
+    if (!window.confirm(`Confirmas que queres ${verb}?\n\n${warning}`)) return;
+
+    setApplyingActionId(action.id);
+    setActionMessages((current) => {
+      const next = { ...current };
+      delete next[action.id];
+      return next;
+    });
+
+    try {
+      const response = await fetch(`/api/admin/clients/${clientId}/tester/knowledge-actions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Não foi possível aplicar a alteração.");
+      setActionMessages((current) => ({
+        ...current,
+        [action.id]: { ok: true, message: `${typeof data.message === "string" ? data.message : "Alteração aplicada à Knowledge Base."} Corre novamente o Tester para validar o resultado.` },
+      }));
+      await refreshKnowledgeMeta();
+    } catch (reason) {
+      setActionMessages((current) => ({
+        ...current,
+        [action.id]: { ok: false, message: reason instanceof Error ? reason.message : "Não foi possível aplicar a alteração." },
+      }));
+    } finally {
+      setApplyingActionId("");
     }
   }
 
@@ -339,6 +416,93 @@ export default function TesterClient({ clients, initialClientId = "" }: { client
               </div>
             )}
           </section>
+
+          {result.knowledgeActions.length > 0 && (
+            <section className="rounded-3xl border border-[#ff7a18]/15 bg-[#ff7a18]/[0.025] p-5 sm:p-7">
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-[#ff8a32]">Otimização de Knowledge</p>
+                <h2 className="mt-1 text-xl font-semibold">Alterações sugeridas pelo Tester</h2>
+                <p className="mt-2 max-w-3xl text-xs leading-5 text-white/40">
+                  O Tester pode propor reorganizações com base apenas em informação já confirmada. Nada é alterado até reveres a proposta e carregares em aplicar.
+                </p>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                {result.knowledgeActions.map((action) => {
+                  const message = actionMessages[action.id];
+                  const target = action.targetEntryId ? action.sourceVersions.find((entry) => entry.id === action.targetEntryId) : null;
+                  const supporting = action.sourceVersions.filter((entry) => entry.id !== action.targetEntryId);
+                  const isApplying = applyingActionId === action.id;
+                  const isApplied = Boolean(message?.ok);
+                  return (
+                    <div key={action.id} className="rounded-2xl border border-white/[0.07] bg-[#101010] p-4 sm:p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.1em] ${action.type === "delete" ? "border-red-400/20 bg-red-400/[0.05] text-red-200/70" : "border-[#ff7a18]/20 bg-[#ff7a18]/[0.05] text-[#ffad69]"}`}>
+                              {action.type === "split" ? "Dividir" : action.type === "create" ? "Criar" : "Apagar"}
+                            </span>
+                            {action.sourceVersions.some((entry) => entry.sourceType === "website") && (
+                              <span className="rounded-full border border-sky-400/15 bg-sky-400/[0.04] px-2 py-1 text-[10px] text-sky-200/60">Inclui Knowledge do website</span>
+                            )}
+                          </div>
+                          <h3 className="mt-2 text-sm font-semibold text-white/85">{action.title}</h3>
+                          <p className="mt-2 max-w-3xl text-xs leading-5 text-white/45">{action.rationale}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                        {target && (
+                          <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3">
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-white/25">Entrada afetada</p>
+                            <p className="mt-1 text-xs font-medium text-white/65">{target.title}</p>
+                          </div>
+                        )}
+                        {supporting.length > 0 && (
+                          <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3">
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-white/25">Informação de suporte</p>
+                            <p className="mt-1 text-xs leading-5 text-white/55">{supporting.map((entry) => entry.title).join(" · ")}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {action.entries.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          <p className="text-[10px] uppercase tracking-[0.12em] text-white/25">{action.type === "split" ? "Novas entradas propostas" : "Entrada proposta"}</p>
+                          {action.entries.map((entry, index) => (
+                            <details key={`${action.id}-${index}`} open={action.entries.length === 1} className="rounded-xl border border-white/[0.06] bg-white/[0.012]">
+                              <summary className="cursor-pointer list-none px-4 py-3 text-xs font-medium text-white/70">{index + 1}. {entry.title} <span className="ml-2 text-white/25">· {entry.category}</span></summary>
+                              <p className="border-t border-white/[0.05] px-4 py-3 whitespace-pre-wrap text-xs leading-5 text-white/45">{entry.content}</p>
+                            </details>
+                          ))}
+                        </div>
+                      )}
+
+                      {action.type === "delete" && (
+                        <p className="mt-4 rounded-xl border border-red-400/15 bg-red-400/[0.035] px-4 py-3 text-xs leading-5 text-red-100/55">
+                          Esta ação é destrutiva. Confirma que a informação da entrada a apagar está realmente preservada nas entradas de suporte indicadas acima.
+                        </p>
+                      )}
+
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.05] pt-4">
+                        {message ? (
+                          <p className={`text-xs ${message.ok ? "text-emerald-200/70" : "text-red-200/70"}`}>{message.message}</p>
+                        ) : <p className="text-xs text-white/25">Revê a proposta antes de aplicar.</p>}
+                        <button
+                          type="button"
+                          disabled={isApplying || isApplied || Boolean(applyingActionId && applyingActionId !== action.id)}
+                          onClick={() => applyKnowledgeAction(action)}
+                          className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${action.type === "delete" ? "border border-red-400/20 bg-red-400/[0.06] text-red-100 hover:bg-red-400/[0.1]" : "bg-[#ff7a18] text-[#151515] hover:bg-[#ff9138]"}`}
+                        >
+                          {isApplied ? "Alteração aplicada" : isApplying ? "A aplicar…" : action.type === "split" ? "Aplicar divisão" : action.type === "create" ? "Criar Knowledge" : "Apagar entrada"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           <section>
             <div className="flex flex-wrap items-end justify-between gap-4">
