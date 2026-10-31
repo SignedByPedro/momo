@@ -5,13 +5,69 @@ import { redirect } from "next/navigation";
 import { requirePortal } from "@/lib/portal/auth";
 import {
   addSupportTicketMessage,
+  createSupportTicket,
   getPortalSupportTicket,
   resolvePortalSupportTicket,
+  type SupportTicketCategory,
 } from "@/lib/support/tickets";
 import { tr } from "@/lib/i18n/ui";
+import { sendNewSupportTicketNotification } from "@/lib/notifications/support-email";
 
 function clean(value: FormDataEntryValue | null, max = 6000) {
   return String(value ?? "").trim().slice(0, max);
+}
+
+
+const SUPPORT_CATEGORIES = new Set<SupportTicketCategory>([
+  "general",
+  "technical",
+  "integration",
+  "feature",
+  "billing",
+  "account",
+  "privacy",
+]);
+
+export async function createManualSupportTicket(formData: FormData) {
+  const session = await requirePortal();
+  const subject = clean(formData.get("subject"), 180);
+  const message = clean(formData.get("message"), 6000);
+  const categoryRaw = clean(formData.get("category"), 40) as SupportTicketCategory;
+  const category: SupportTicketCategory = SUPPORT_CATEGORIES.has(categoryRaw) ? categoryRaw : "general";
+
+  if (!subject || !message) {
+    redirect(`/portal/support/new?error=${encodeURIComponent(tr(session.language, "Preenche o assunto e a mensagem.", "Fill in the subject and message."))}`);
+  }
+
+  const ticket = await createSupportTicket({
+    organizationId: session.organizationId,
+    openedByUserId: session.userId,
+    openedByEmail: session.email,
+    subject,
+    category,
+    priority: "normal",
+    summary: message.slice(0, 1200),
+    initialMessage: message,
+    context: [],
+  });
+
+  try {
+    await sendNewSupportTicketNotification({
+      ticketId: ticket.id,
+      organizationName: session.organizationName,
+      openedByEmail: session.email,
+      subject: ticket.subject,
+      summary: ticket.ai_summary,
+      category: ticket.category,
+      priority: ticket.priority,
+    });
+  } catch (error) {
+    console.error("[support-notification] Could not send manual ticket email:", error);
+  }
+
+  revalidatePath("/portal/support");
+  revalidatePath("/admin/support");
+  redirect(`/portal/support/${ticket.id}?notice=${encodeURIComponent(tr(session.language, "Ticket criado e enviado para a equipa.", "Ticket created and sent to the team."))}`);
 }
 
 export async function replyToSupportTicket(formData: FormData) {

@@ -1,4 +1,5 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
+import PasswordInput from "@/components/forms/PasswordInput";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import MomoIcon from "@/components/momo/MomoIcon";
@@ -29,9 +30,9 @@ export default async function PortalLoginPage({ searchParams }: { searchParams: 
           <SubmitLoginOnEnter>
           <input type="hidden" name="language" value={l}/>
           <label className="block text-xs font-medium uppercase tracking-[0.14em] text-white/40">Email</label>
-          <input name="email" type="email" autoComplete="email" required className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60" placeholder="name@company.com" />
+          <input name="email" type="email" autoComplete="email" required className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60" placeholder="name@company.com" />
           <label className="mt-5 block text-xs font-medium uppercase tracking-[0.14em] text-white/40">{tr(l,"Password","Password")}</label>
-          <input name="password" type="password" autoComplete="current-password" required className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60" placeholder="••••••••" />
+          <PasswordInput name="password" wrapperClassName="mt-2" autoComplete="current-password" required className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60" placeholder="••••••••" showLabel={tr(l,"Mostrar password","Show password")} hideLabel={tr(l,"Ocultar password","Hide password")} />
           {query.deleted === "1" && <p role="status" className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-2.5 text-sm text-emerald-200/90">{tr(l, "A tua conta foi eliminada. Deixaste de ter acesso ao Portal.", "Your account has been deleted. Your Portal access has ended.")}</p>}
           {query.error && <p className="mt-4 rounded-xl border border-red-400/15 bg-red-400/[0.06] px-3 py-2.5 text-sm text-red-200/90">{query.error}</p>}
           <FormSubmitButton pendingLabel={tr(l,"A entrar…","Signing in…")} type="submit" className="mt-6 w-full rounded-xl bg-[#ff7a18] px-4 py-3 text-sm font-semibold text-[#151515] transition hover:bg-[#ff9138]">{tr(l,"Entrar","Sign in")}</FormSubmitButton>

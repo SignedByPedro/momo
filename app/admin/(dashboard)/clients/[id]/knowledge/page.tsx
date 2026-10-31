@@ -1,4 +1,5 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
+import ClientAgentTester from "@/components/testing/ClientAgentTester";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -53,7 +54,7 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
 
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/admin/tester?client=${id}`}
+            href="#tester"
             className="rounded-xl border border-[#ff7a18]/25 bg-[#ff7a18]/[0.05] px-4 py-2.5 text-sm text-[#ff9a4d] transition hover:bg-[#ff7a18]/[0.1]"
           >
             Testar agente
@@ -219,6 +220,10 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
           ))
         )}
       </section>
+
+      <div className="mt-10 border-t border-white/[0.07] pt-8">
+        <ClientAgentTester fixedClientId={id} surface="admin" embedded />
+      </div>
     </div>
   );
 }

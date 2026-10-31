@@ -1,4 +1,5 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
+import PasswordInput from "@/components/forms/PasswordInput";
 import { redirect } from "next/navigation";
 import MomoIcon from "@/components/momo/MomoIcon";
 import SubmitLoginOnEnter from "@/app/_components/SubmitLoginOnEnter";
@@ -36,19 +37,19 @@ export default async function AdminLoginPage({ searchParams }: Props) {
             type="email"
             autoComplete="email"
             required
-            className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60"
+            className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60"
             placeholder="admin@exemplo.com"
           />
 
           <label className="mt-5 block text-xs font-medium uppercase tracking-[0.14em] text-white/40">
             Password
           </label>
-          <input
+          <PasswordInput
             name="password"
-            type="password"
+            wrapperClassName="mt-2"
             autoComplete="current-password"
             required
-            className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60"
+            className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none transition focus:border-[#ff7a18]/60"
             placeholder="••••••••"
           />
 

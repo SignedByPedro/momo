@@ -1,4 +1,5 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
+import PasswordInput from "@/components/forms/PasswordInput";
 import Link from "next/link";
 import { getOrganizationMembers } from "@/lib/admin/members";
 import { requirePortal } from "@/lib/portal/auth";
@@ -75,15 +76,15 @@ export default async function PortalAccountPage({
           <input type="hidden" name="uiLanguage" value={l} />
           <label className="grid gap-2 text-xs text-white/55">
             {tr(l, "Password atual", "Current password")}
-            <input name="currentPassword" type="password" autoComplete="current-password" required minLength={1} className="min-h-11 rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" />
+            <PasswordInput name="currentPassword" autoComplete="current-password" required minLength={1} className="min-h-11 w-full rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" showLabel={tr(l, "Mostrar password", "Show password")} hideLabel={tr(l, "Ocultar password", "Hide password")} />
           </label>
           <label className="grid gap-2 text-xs text-white/55">
             {tr(l, "Nova password", "New password")}
-            <input name="newPassword" type="password" autoComplete="new-password" required minLength={8} className="min-h-11 rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" />
+            <PasswordInput name="newPassword" autoComplete="new-password" required minLength={8} className="min-h-11 w-full rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" showLabel={tr(l, "Mostrar password", "Show password")} hideLabel={tr(l, "Ocultar password", "Hide password")} />
           </label>
           <label className="grid gap-2 text-xs text-white/55">
             {tr(l, "Confirmar nova password", "Confirm new password")}
-            <input name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} className="min-h-11 rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" />
+            <PasswordInput name="confirmPassword" autoComplete="new-password" required minLength={8} className="min-h-11 w-full rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-[#ff8a32]/50" showLabel={tr(l, "Mostrar password", "Show password")} hideLabel={tr(l, "Ocultar password", "Hide password")} />
           </label>
           <p className="text-xs leading-5 text-white/35">
             {tr(l, "A nova password deve ter pelo menos 8 caracteres.", "The new password must be at least 8 characters long.")}
@@ -144,7 +145,7 @@ export default async function PortalAccountPage({
             <input type="hidden" name="uiLanguage" value={l} />
             <label className="grid gap-2 text-xs text-white/55">
               {tr(l, "Password atual", "Current password")}
-              <input name="password" type="password" autoComplete="current-password" required minLength={1} className="min-h-11 rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-red-300/40" />
+              <PasswordInput name="password" autoComplete="current-password" required minLength={1} className="min-h-11 w-full rounded-xl border border-white/[0.1] bg-[#101010] px-3 text-sm text-white outline-none focus:border-red-300/40" showLabel={tr(l, "Mostrar password", "Show password")} hideLabel={tr(l, "Ocultar password", "Hide password")} />
             </label>
             <label className="grid gap-2 text-xs text-white/55">
               {tr(l, `Para confirmar, escreve exatamente ${confirmation}`, `To confirm, type exactly ${confirmation}`)}

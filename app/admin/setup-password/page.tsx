@@ -1,5 +1,6 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import MomoIcon from "@/components/momo/MomoIcon";
+import PasswordInput from "@/components/forms/PasswordInput";
 import { redirect } from "next/navigation";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -53,22 +54,26 @@ export default async function AdminSetupPasswordPage({
         <form action={setAdminOwnerPassword} className="rounded-3xl border border-white/[0.08] bg-[#151515] p-6 shadow-2xl">
           <input type="hidden" name="language" value={l} />
           <label className="block text-xs uppercase tracking-[0.14em] text-white/40">{tr(l, "Nova password", "New password")}</label>
-          <input
+          <PasswordInput
             name="password"
-            type="password"
+            wrapperClassName="mt-2"
             minLength={8}
             required
             autoComplete="new-password"
-            className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none focus:border-[#ff7a18]/60"
+            className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none focus:border-[#ff7a18]/60"
+            showLabel={tr(l, "Mostrar password", "Show password")}
+            hideLabel={tr(l, "Ocultar password", "Hide password")}
           />
           <label className="mt-5 block text-xs uppercase tracking-[0.14em] text-white/40">{tr(l, "Confirmar password", "Confirm password")}</label>
-          <input
+          <PasswordInput
             name="confirm"
-            type="password"
+            wrapperClassName="mt-2"
             minLength={8}
             required
             autoComplete="new-password"
-            className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none focus:border-[#ff7a18]/60"
+            className="w-full rounded-xl border border-white/[0.08] bg-[#0f0f0f] px-3.5 py-3 text-sm outline-none focus:border-[#ff7a18]/60"
+            showLabel={tr(l, "Mostrar password", "Show password")}
+            hideLabel={tr(l, "Ocultar password", "Hide password")}
           />
           {query.error && (
             <p className="mt-4 rounded-xl border border-red-400/15 bg-red-400/[0.06] px-3 py-2.5 text-sm text-red-200/90">

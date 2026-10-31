@@ -1,5 +1,4 @@
 import Link from "next/link";
-import OpenSupportButton from "@/components/portal/OpenSupportButton";
 import { requirePortal } from "@/lib/portal/auth";
 import { getUnreadSupportTicketIds } from "@/lib/support/unread";
 import {
@@ -31,10 +30,15 @@ export default async function PortalSupportPage({
           <p className="text-xs uppercase tracking-[0.18em] text-[#ff8a32]">Momo Support</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Support</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/40">
-            {tr(l, "O Momo ajuda-te 24/7. Quando uma questão precisa da equipa, cria um pedido de suporte automaticamente.", "Momo helps you 24/7. When something needs the team, it automatically creates a support request.")}
+            {tr(l, "O Momo ajuda-te 24/7. Se quiseres falar diretamente com a equipa, também podes criar um ticket manualmente.", "Momo helps you 24/7. If you want to contact the team directly, you can also create a ticket manually.")}
           </p>
         </div>
-        <OpenSupportButton language={l} />
+        <Link
+          href="/portal/support/new"
+          className="rounded-xl bg-[#ff7a18] px-4 py-2.5 text-sm font-semibold text-[#17110d] transition hover:bg-[#ff9348]"
+        >
+          {tr(l, "Criar ticket", "Create ticket")}
+        </Link>
       </div>
 
       {query.error && (
