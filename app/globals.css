@@ -1044,3 +1044,137 @@ input:disabled {
     padding: 13px 17px 13px 18px;
   }
 }
+
+.momo-demo {
+  --momo-rounded-font: ui-rounded, "SF Pro Rounded", "Avenir Next Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+}
+
+.momo-demo-copy {
+  position: absolute;
+  z-index: 2;
+  top: 46%;
+  left: clamp(28px, 7vw, 96px);
+  width: min(720px, 54vw);
+  transform: translateY(-50%);
+}
+
+.momo-demo-title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.96);
+  font-family: var(--momo-rounded-font);
+  font-size: clamp(56px, 6.2vw, 96px);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.94;
+}
+
+.momo-demo-title > span {
+  display: flex;
+  align-items: center;
+}
+
+.momo-demo-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.78em;
+  margin-left: 8px;
+  flex: none;
+  background: rgba(255, 255, 255, 0.92);
+  animation: momo-demo-blink 0.9s steps(1) infinite;
+}
+
+.momo-demo-reveal {
+  animation: momo-demo-fade 0.8s ease both;
+}
+
+@keyframes momo-demo-blink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+@keyframes momo-demo-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.momo-demo-privacy {
+  position: absolute;
+  z-index: 2;
+  left: clamp(28px, 7vw, 96px);
+  bottom: 28px;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 12px;
+}
+
+.momo-demo-privacy:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.momo-demo-launcher {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.momo-demo-ring {
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(255, 154, 79, 0.75);
+  border-radius: 999px;
+  animation: momo-demo-pulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+.momo-demo-nudge {
+  position: absolute;
+  right: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: #141414;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: var(--momo-rounded-font);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.momo-demo-nudge:hover {
+  border-color: rgba(255, 154, 79, 0.45);
+  color: #fff;
+}
+
+@keyframes momo-demo-pulse {
+  0% { transform: scale(1); opacity: 0.75; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+@media (max-width: 899px) {
+  .momo-demo-copy {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-width: 640px;
+    margin: 0;
+    padding: 18vh 22px 0;
+    transform: none;
+  }
+
+  .momo-demo-title {
+    font-size: clamp(46px, 13vw, 68px);
+  }
+
+  .momo-demo-privacy {
+    left: 22px;
+    bottom: 22px;
+  }
+}

@@ -9,6 +9,7 @@ import {
   deriveConversationState,
   websiteSharedInLatestUserTurn,
 } from "@/lib/conversations/state";
+import { recordDemoFreeMessage } from "@/lib/demo/sessions";
 import { retrieveMomoKnowledge } from "@/lib/knowledge/momo-knowledge";
 import {
   chatResponseHeaders,
@@ -38,7 +39,16 @@ type ChatRequestBody = {
   messages?: UIMessage[];
   conversationId?: string;
   language?: "pt" | "en";
+  demoSessionId?: string;
 };
+
+function messageText(message: UIMessage) {
+  return message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("")
+    .trim();
+}
 
 export async function POST(req: Request) {
   if (!requestHasTrustedOrigin(req)) {
@@ -56,7 +66,7 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody<ChatRequestBody>(req);
   if (!parsed.ok) return parsed.response;
 
-  const { messages: rawMessages, conversationId, language } = parsed.value;
+  const { messages: rawMessages, conversationId, language, demoSessionId } = parsed.value;
 
   if (!validConversationId(conversationId)) {
     return jsonError("Invalid conversation id.", 400);
@@ -149,6 +159,21 @@ export async function POST(req: Request) {
     return jsonError("Could not save the conversation.", 500);
   }
 
+  const latestUser = [...messages].reverse().find((message) => message.role === "user");
+  const latestUserText = latestUser ? messageText(latestUser) : "";
+  if (validConversationId(demoSessionId) && latestUserText) {
+    try {
+      await recordDemoFreeMessage({
+        sessionId: demoSessionId,
+        conversationId,
+        role: "user",
+        text: latestUserText,
+      });
+    } catch (error) {
+      console.error("Demo transcript error before response:", error);
+    }
+  }
+
   const result = streamText({
     model: openai(process.env.OPENAI_MODEL || "gpt-5.6-luna"),
     system: buildMomoSystemPrompt(state, {
@@ -167,6 +192,18 @@ export async function POST(req: Request) {
         });
       } catch (error) {
         console.error("Supabase persistence error after response:", error);
+      }
+
+      if (!validConversationId(demoSessionId) || !text.trim()) return;
+      try {
+        await recordDemoFreeMessage({
+          sessionId: demoSessionId,
+          conversationId,
+          role: "assistant",
+          text,
+        });
+      } catch (error) {
+        console.error("Demo transcript error after response:", error);
       }
     },
   });

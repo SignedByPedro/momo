@@ -15,6 +15,7 @@ export default function AdminNav({
       <Link className={itemClass} href="/admin">Leads</Link>
       <Link className={itemClass} href="/admin/clients">{tr(language, "Clientes", "Clients")}</Link>
       <Link className={itemClass} href="/admin/conversations">{tr(language, "Conversas", "Conversations")}</Link>
+      <Link className={itemClass} href="/admin/demo">Demo</Link>
       <Link className={itemClass} href="/admin/knowledge">{tr(language, "Conhecimento", "Knowledge")}</Link>
       <Link className={`${itemClass} relative`} href="/admin/support">
         Support<SupportUnreadBadge area="admin" initialCount={initialUnreadCount} language={language} />
