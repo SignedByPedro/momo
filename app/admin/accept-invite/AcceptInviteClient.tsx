@@ -11,6 +11,7 @@ export default function AcceptAdminInviteClient({ language }: { language: UiLang
   const en = language === "en";
 
 
+
   useEffect(() => {
     let cancelled = false;
 
