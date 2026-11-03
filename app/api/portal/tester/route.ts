@@ -19,7 +19,7 @@ import {
   rateLimitResponse,
   requestHasTrustedOrigin,
 } from "@/lib/security/request-security";
-import { evaluateTesterRun, generateTesterPlan, type TesterConversationPlan, type TesterQuestionPlan } from "@/lib/testing/client-agent-tester";
+import { auditTesterKnowledge, evaluateTesterRun, generateTesterPlan, type TesterConversationPlan, type TesterQuestionPlan } from "@/lib/testing/client-agent-tester";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -27,6 +27,7 @@ export const maxDuration = 120;
 type TesterBody = {
   knowledgeEntryIds?: unknown;
   questionCount?: unknown;
+  phase?: unknown;
 };
 
 type ConversationMessage = {
@@ -93,6 +94,8 @@ export async function GET(req: Request) {
       id: entry.id,
       title: entry.title,
       category: entry.category,
+      content: entry.content,
+      updatedAt: entry.updated_at,
       sourceType: entry.source_type,
       indexed: Boolean(entry.embedding),
     })),
@@ -110,6 +113,7 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody<TesterBody>(req, 24000);
   if (!parsed.ok) return parsed.response;
 
+  const phase = parsed.value.phase === "audit" ? "audit" : "test";
   const countRaw = typeof parsed.value.questionCount === "number" ? parsed.value.questionCount : 28;
   const profile = TEST_PROFILES[countRaw as keyof typeof TEST_PROFILES] ?? TEST_PROFILES[28];
   const requestedIds = Array.isArray(parsed.value.knowledgeEntryIds)
@@ -118,9 +122,9 @@ export async function POST(req: Request) {
 
   const limit = await consumeRateLimit({
     request: req,
-    namespace: "portal-client-tester",
+    namespace: phase === "audit" ? "portal-client-knowledge-audit" : "portal-client-tester",
     subject: `portal:${session.userId}:organization:${id}`,
-    limit: 6,
+    limit: phase === "audit" ? 12 : 6,
     windowSeconds: 900,
   });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
@@ -131,9 +135,8 @@ export async function POST(req: Request) {
     getClientKnowledgeEntries(id),
     getPublishedInternalClientKnowledge(id),
   ]);
-  if (!organization || !config) return jsonError("Client not found.", 404);
+  if (!organization) return jsonError("Client not found.", 404);
   const clientOrganization = organization;
-  const clientConfig = config;
 
   const allPublishedEntries = publicPublished(entries);
   if (!allPublishedEntries.length) {
@@ -151,8 +154,30 @@ export async function POST(req: Request) {
 
   const totalSelectedChars = selectedEntries.reduce((sum, entry) => sum + entry.title.length + entry.content.length, 0);
   if (totalSelectedChars > 80000) {
-    return jsonError("A seleção é demasiado grande para um único teste. Seleciona menos entradas.", 400);
+    return jsonError("A seleção é demasiado grande para uma única análise. Seleciona menos entradas.", 400);
   }
+
+  if (phase === "audit") {
+    try {
+      const audit = await auditTesterKnowledge({
+        organization: clientOrganization,
+        selectedEntries,
+        allPublishedEntries,
+      });
+      return Response.json({
+        organization: { id: clientOrganization.id, name: clientOrganization.name },
+        scope: { selectedCount: selectedEntries.length, allKnowledge: requestedIds.length === 0 },
+        ...audit,
+      }, { headers: chatResponseHeaders });
+    } catch (error) {
+      console.error("Client Knowledge audit failed:", { organizationId: id, error });
+      const message = error instanceof Error ? error.message : "Não foi possível analisar a Knowledge Base.";
+      return jsonError(message, 503);
+    }
+  }
+
+  if (!config) return jsonError("O agente deste cliente ainda não está configurado.", 400);
+  const clientConfig = config;
 
   try {
     const plan = await generateTesterPlan({

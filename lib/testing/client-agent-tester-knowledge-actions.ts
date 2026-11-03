@@ -27,7 +27,7 @@ export function normalizeTesterKnowledgeAction(value: unknown): TesterKnowledgeA
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
   const id = cleanText(row.id, 100);
-  const type = row.type === "split" || row.type === "create" || row.type === "delete" ? row.type : null;
+  const type = row.type === "split" || row.type === "create" || row.type === "delete" || row.type === "update" ? row.type : null;
   if (!type || !isUuid(id)) return null;
 
   const targetEntryId = typeof row.targetEntryId === "string" && isUuid(row.targetEntryId) ? row.targetEntryId : null;
@@ -41,7 +41,7 @@ export function normalizeTesterKnowledgeAction(value: unknown): TesterKnowledgeA
       const sourceId = cleanText(source.id, 100);
       const updatedAt = cleanText(source.updatedAt, 100);
       const title = cleanText(source.title, 180);
-      const sourceType = source.sourceType === "website" ? "website" as const : "manual" as const;
+      const sourceType = source.sourceType === "website" ? "website" as const : source.sourceType === "document" ? "document" as const : "manual" as const;
       if (!isUuid(sourceId) || !updatedAt) return [];
       return [{ id: sourceId, updatedAt, title, sourceType }];
     }).slice(0, 8)
@@ -53,6 +53,7 @@ export function normalizeTesterKnowledgeAction(value: unknown): TesterKnowledgeA
   if (type === "split" && (!targetEntryId || entries.length < 2)) return null;
   if (type === "create" && (sourceEntryIds.length < 1 || entries.length < 1)) return null;
   if (type === "delete" && (!targetEntryId || sourceEntryIds.length < 1 || sourceEntryIds.includes(targetEntryId))) return null;
+  if (type === "update" && (!targetEntryId || entries.length !== 1)) return null;
 
   const requiredIds = new Set([targetEntryId, ...sourceEntryIds].filter((item): item is string => Boolean(item)));
   if (sourceVersions.length !== requiredIds.size || sourceVersions.some((source) => !requiredIds.has(source.id))) return null;
@@ -60,7 +61,7 @@ export function normalizeTesterKnowledgeAction(value: unknown): TesterKnowledgeA
   return {
     id,
     type,
-    title: cleanText(row.title, 180) || (type === "split" ? "Dividir entrada" : type === "create" ? "Criar entrada" : "Apagar entrada redundante"),
+    title: cleanText(row.title, 180) || (type === "split" ? "Dividir entrada" : type === "create" ? "Criar entrada" : type === "update" ? "Atualizar entrada" : "Apagar entrada redundante"),
     rationale: cleanText(row.rationale, 1800),
     targetEntryId,
     sourceEntryIds,
@@ -145,6 +146,37 @@ export async function applyTesterKnowledgeAction(args: {
     if (current.visibility !== "public" || current.status !== "published") {
       throw new Error("Uma das entradas deixou de estar Pública + Publicada. Corre o Tester novamente.");
     }
+  }
+
+  if (action.type === "update") {
+    const target = action.targetEntryId ? currentById.get(action.targetEntryId) : null;
+    if (!target) throw new Error("A entrada já não existe. Corre novamente o Audit antes de guardar esta correção.");
+    const [entry] = action.entries;
+    const [embedding] = await createEmbeddings([entry]);
+    const now = new Date().toISOString();
+
+    const { data: updated, error } = await supabase
+      .from("knowledge_entries")
+      .update({
+        title: entry.title,
+        category: entry.category,
+        content: entry.content,
+        embedding,
+        updated_at: now,
+      })
+      .eq("organization_id", organizationId)
+      .eq("agent_key", "client")
+      .eq("id", target.id)
+      .eq("updated_at", target.updated_at)
+      .select("id, title")
+      .single();
+
+    if (error || !updated) {
+      throw error ?? new Error("A entrada mudou desde o Audit. Corre novamente antes de aplicar a correção.");
+    }
+
+    revalidateKnowledge(organizationId);
+    return { alreadyApplied: false, message: `“${entry.title}” foi atualizada e reindexada.`, created: [updated] };
   }
 
   if (action.type === "delete") {
