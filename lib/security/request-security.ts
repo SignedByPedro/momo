@@ -78,8 +78,22 @@ export function requestHasTrustedOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
 
+  let originHost: string;
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    originHost = new URL(origin).host;
+  } catch {
+    return false;
+  }
+
+  // On Vercel, request.url can be the deployment host while the browser
+  // Origin is the public preview alias. The forwarded host is the one the
+  // visitor actually used.
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const requestHost = forwardedHost || request.headers.get("host");
+  if (requestHost && originHost === requestHost) return true;
+
+  try {
+    return originHost === new URL(request.url).host;
   } catch {
     return false;
   }

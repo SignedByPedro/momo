@@ -144,6 +144,9 @@ function demoError(error: unknown) {
   if (error instanceof DemoFlowError) {
     return jsonError(error.message, error.status);
   }
+  if (error instanceof Error && error.message.includes("SUPABASE_URL")) {
+    return jsonError("Demo storage is not ready.", 503);
+  }
   console.error("Demo request failed:", error);
   return jsonError("Could not save the demo.", 500);
 }
