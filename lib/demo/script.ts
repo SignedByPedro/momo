@@ -56,7 +56,7 @@ export type DemoSessionState = {
 
 const copy = {
   pt: {
-    heroLead: "Olá, este é o",
+    heroLead: "Olá, este é o ",
     heroAccent: "Momo",
     nudge: "Carrega aqui",
     greeting: "Olá, eu sou o Momo, e tu, como te chamas?",
@@ -99,7 +99,7 @@ const copy = {
     },
   },
   en: {
-    heroLead: "Hi, this is",
+    heroLead: "Hi, this is ",
     heroAccent: "Momo",
     nudge: "Tap here",
     greeting: "Hi, I'm Momo, and you, what's your name?",

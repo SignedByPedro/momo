@@ -7,6 +7,7 @@ import ChatMessage from "@/components/momo/ChatMessage";
 import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "@/components/momo/LauncherChatGlyph";
 import MomoIcon from "@/components/momo/MomoIcon";
 import { demoCopy, type DemoLanguage, type DemoView } from "@/lib/demo/script";
+import styles from "./demo.module.css";
 
 const LANGUAGE_STORAGE_KEY = "momo-language";
 const LANGUAGE_CHANGE_EVENT = "momo-language-change";
@@ -398,9 +399,9 @@ export default function DemoExperience() {
     : "";
 
   return (
-    <main className="momo-demo">
+    <main className={styles.root}>
       {launcherVisible && (
-      <header className="momo-sales-topbar momo-demo-reveal">
+      <header className={`momo-sales-topbar ${styles.reveal}`}>
         {!view && (
           <div className="momo-sales-language" role="group" aria-label={language === "en" ? "Language" : "Idioma"}>
             {(["pt", "en"] as const).map((option) => (
@@ -419,25 +420,25 @@ export default function DemoExperience() {
       </header>
       )}
 
-      <div className="momo-demo-copy">
-        <h1 className="momo-demo-title" aria-label={`${text.heroLead} ${text.heroAccent}`}>
+      <div className={styles.copy}>
+        <h1 className={styles.title} aria-label={`${text.heroLead.trim()} ${text.heroAccent}`}>
           {typed > 0 && (
             <span>
               {shownLead}
-              {stillTyping && typed <= text.heroLead.length && <i className="momo-demo-caret" aria-hidden="true" />}
+              {stillTyping && typed <= text.heroLead.length && <i className={styles.caret} aria-hidden="true" />}
             </span>
           )}
           {typed > text.heroLead.length && (
             <span>
               <span className="momo-sales-title-accent">{shownAccent}</span>
-              {stillTyping && <i className="momo-demo-caret" aria-hidden="true" />}
+              {stillTyping && <i className={styles.caret} aria-hidden="true" />}
             </span>
           )}
         </h1>
       </div>
 
       {launcherVisible && (
-        <a className="momo-demo-privacy momo-demo-reveal" href="/legal/privacy">
+        <a className={`${styles.privacy} ${styles.reveal}`} href="/legal/privacy">
           {language === "en" ? "Privacy" : "Privacidade"}
         </a>
       )}
@@ -560,12 +561,12 @@ export default function DemoExperience() {
       )}
 
       {launcherVisible && (
-      <div className="momo-demo-reveal fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7">
-          <div className="momo-demo-launcher">
+      <div className={`${styles.reveal} fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7`}>
+          <div className={styles.launcher}>
             {!open && (
               <>
-                <span className="momo-demo-ring" aria-hidden="true" />
-                <button type="button" className="momo-demo-nudge" onClick={() => void openChat()}>
+                <span className={styles.ring} aria-hidden="true" />
+                <button type="button" className={styles.nudge} onClick={() => void openChat()}>
                   {text.nudge}
                 </button>
               </>
