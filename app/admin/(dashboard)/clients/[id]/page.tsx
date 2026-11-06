@@ -8,6 +8,7 @@ import { getClientConversationStats } from "@/lib/admin/client-conversations";
 import { getOrganizationMemberUsage } from "@/lib/admin/members";
 import { getOrganization, type OrganizationStatus } from "@/lib/admin/organizations";
 import { getServerTimeMs } from "@/lib/server-time";
+import { organizationPlanLabel, organizationPlanOptions } from "@/lib/plans";
 import {
   deleteClient,
   reactivateClient,
@@ -62,7 +63,12 @@ export default async function ClientDetailPage({
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">{client.name}</h1>
           <p className="mt-2 text-sm text-white/40">Criado em {formatDate(client.created_at)}</p>
         </div>
-        <OrganizationStatusBadge status={client.status} />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-[#ff7a18]/20 bg-[#ff7a18]/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#ffad6b]">
+            {organizationPlanLabel(client.plan)}
+          </span>
+          <OrganizationStatusBadge status={client.status} />
+        </div>
       </div>
 
       {query.notice && (
@@ -169,6 +175,18 @@ export default async function ClientDetailPage({
                 )}
               </label>
             </div>
+
+            <label className="grid gap-2 text-xs text-white/45">
+              Plano
+              <select name="plan" defaultValue={client.plan} className="min-h-11 rounded-xl border border-white/[0.08] bg-[#101010] px-3 text-sm text-white outline-none">
+                {organizationPlanOptions.map((plan) => (
+                  <option key={plan.value} value={plan.value}>{plan.label} — {plan.description}</option>
+                ))}
+              </select>
+              <span className="text-[11px] leading-5 text-white/25">
+                Upgrade e downgrade aplicam-se imediatamente no Portal. Um downgrade não apaga configurações ou dados Premium, apenas bloqueia o acesso até um futuro upgrade.
+              </span>
+            </label>
 
             <label className="grid gap-2 text-xs text-white/45 sm:max-w-xs">
               Limite de utilizadores no portal

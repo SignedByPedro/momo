@@ -31,6 +31,10 @@ function latestUserMessage(messages: SupportMessage[]) {
 
 const SUPPORT_TOPIC_PATTERNS: Array<{ label: string; pattern: RegExp }> = [
   {
+    label: "plans and access",
+    pattern: /\b(plano|planos|plan|plans|base|premium|business|upgrade|downgrade|pre[cç]os?|precos?|pricing|price|mensalidade|subscription|subscri[cç][aã]o)\b/i,
+  },
+  {
     label: "widget",
     pattern: /\b(widget|launcher|avatar|hover|cores?|colors?|colours?|bot[aã]o|button|janela de chat|chat window|largura|width|altura|height|tamanho|size)\b/i,
   },

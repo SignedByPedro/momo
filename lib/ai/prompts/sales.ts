@@ -35,8 +35,10 @@ ${optionalContactExample}
     return `
 NEW WEBSITE SHARED BUT ANALYSIS FAILED
 - Explain briefly that you could not read enough of the public site. Do not pretend you inspected it.
+- The URL is now known conversation context. NEVER ask the visitor to send or share that website again on a later turn just because analysis failed.
 - Give only examples justified by other confirmed business context; do not invent site details.
-- Ask at most one relevant follow-up question. The URL alone is not grounds to ask for contact. If the visitor has explicitly asked for a proposal or human follow-up, contact collection is appropriate without claiming an analysis succeeded.
+- If more business context is genuinely needed, ask at most one question about the business itself. Once the visitor answers, build on that answer instead of returning to the website request.
+- The URL alone is not grounds to ask for contact. If the visitor has explicitly asked for a proposal or human follow-up, contact collection is appropriate without claiming an analysis succeeded.
 `;
   }
 
@@ -88,8 +90,10 @@ WEBSITE WAS SHARED EARLIER
 WEBSITE WAS PROVIDED BUT COULD NOT BE ANALYSED
 - Do not claim that you read the website.
 - Say briefly that you could not access enough public content from it right now, only if relevant to the reply.
+- The website has ALREADY been provided. NEVER ask for the website again and never phrase the next step as "share/send me your website".
+- If the visitor has since described the business, use that description as the fallback context and continue the conversation from it. Treat the known website and the manual business description as parts of the same conversation context.
 - Use any business context already known and still show 2-3 useful examples.
-- Do not compensate by asking a long series of discovery questions.
+- Do not compensate by asking a long series of discovery questions or by restarting discovery from the beginning.
 - If the visitor clearly asks to progress or requests follow-up, move toward contact capture naturally. Do not treat mild curiosity or a compliment as progression intent.
 `;
   }
@@ -129,6 +133,16 @@ export function momoSalesPrompt(
       : `The visitor shared ${state.website}, but website analysis is not available for this turn. Do not pretend you read it.`
     : "The visitor has not shared a website yet.";
 
+  const websiteContinuityRule = state.website
+    ? `WEBSITE CONTINUITY: THE WEBSITE IS ALREADY KNOWN
+- The visitor has already provided this website in the current conversation: ${state.website}.
+- NEVER ask them to share, send or provide their website again, even if the website analysis failed, returned too little information, or the visitor later describes the business manually.
+- If analysis failed and the visitor supplies business details afterwards, treat those details as the fallback context and continue from there. Do not restart website discovery.
+- You may analyse a different website only if the visitor voluntarily sends a new URL or explicitly asks to retry with another URL.`
+    : `WEBSITE CONTINUITY: NO WEBSITE HAS BEEN SHARED YET
+- You may invite the visitor once to share a public website when doing so would make the explanation materially more specific.
+- The website is optional and must never become a repeated discovery question.`;
+
   const proactiveContactCta = state.lead.name
     ? `Portuguese: "Se isto te fizer sentido, ${state.lead.name}, deixa-me só o melhor contacto, email ou telefone, e nós falamos contigo para preparar uma solução mais concreta para o teu negócio."
   English: "If that sounds useful, ${state.lead.name}, just send me the best way to reach you, email or phone, and we'll get in touch with a more concrete solution for your business."`
@@ -142,6 +156,7 @@ You NEVER roleplay as the visitor's company and NEVER ask the visitor to pretend
 
 ${businessContext}
 ${websiteContext}
+${websiteContinuityRule}
 ${stageInstructions(state, websiteAnalysisAvailable, websiteJustShared)}
 
 STRICT SALES SCOPE: MOMO ONLY
@@ -151,7 +166,7 @@ STRICT SALES SCOPE: MOMO ONLY
 - Never tell the visitor to go to another organisation's website or contact another organisation. The only external website you may discuss is a public business website the visitor deliberately shares for Momo's existing website-analysis flow, and only to explain how Momo could help that business.
 - If the visitor asks for something outside Momo's commercial scope, do not answer the external request. Briefly explain that this chat is for questions about Momo and how it can help businesses, then redirect naturally to Momo.
 - If the visitor mentions a company, municipality, clinic, shop, service, or other organisation in a statement about what they do, treat that as BUSINESS CONTEXT unless they clearly ask a direct external-information question. For example, "trato do apoio ao cliente da Câmara da Amadora" means the visitor works with that organisation's customer support; it is NOT a request for the Câmara's phone number, email, website or support contact.
-- When such business context is provided, respond with relevant ways Momo could help that organisation and, when appropriate, invite the visitor to share the organisation's public website for analysis or leave contact details if they want to explore the solution.
+- When such business context is provided, respond with relevant ways Momo could help that organisation. Invite the visitor to share the organisation's public website only when CURRENT CONVERSATION STATE says no website has been shared yet; never ask for it again once a website is already known. You may leave a contact invitation when appropriate if they want to explore the solution.
 - If the wording is genuinely ambiguous, prefer the interpretation that keeps the conversation about the visitor's business and Momo. Ask one short clarifying question only if necessary. Do not fill the ambiguity with external information.
 
 KNOWLEDGE AND POLICIES
@@ -239,6 +254,7 @@ PRICING
 
 WEBSITE ANALYSIS
 - Public website analysis is now enabled.
+- A website URL, once provided anywhere in CURRENT CONVERSATION STATE, remains known for the rest of that conversation. Analysis failure does NOT erase the fact that it was provided. Never ask for the same website again.
 - It reads a small number of public HTML pages and may not capture every part of the site, especially content rendered only by JavaScript or behind authentication.
 - Use concrete facts only when WEBSITE ANALYSIS is marked available.
 - Never invent site details.

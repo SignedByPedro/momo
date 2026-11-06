@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireOrganizationOwnerAccess } from "@/lib/portal/auth";
+import { requireOrganizationPremiumOwnerAccess } from "@/lib/portal/auth";
 import {
   type AgentContactCaptureMode,
   type AgentFallbackBehavior,
@@ -66,7 +66,7 @@ function redirectWith(
 
 export async function saveClientAgentConfig(formData: FormData) {
   const organizationId = clean(formData.get("organizationId"), 100);
-  const access = await requireOrganizationOwnerAccess(organizationId);
+  const access = await requireOrganizationPremiumOwnerAccess(organizationId);
   const language = access.portal?.language ?? "pt";
   const name = clean(formData.get("name"), 80);
   const welcomeMessage = clean(formData.get("welcomeMessage"), 500);

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { getOrganizationMemberUsage } from "@/lib/admin/members";
 import { getOrganization } from "@/lib/admin/organizations";
 import { inviteOrganizationUser, organizationEmailAlreadyUsed } from "@/lib/members/invitations";
-import { requirePortalOwner } from "@/lib/portal/auth";
+import { requirePortalPremiumOwner } from "@/lib/portal/auth";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeUiLanguage, tr } from "@/lib/i18n/ui";
 
@@ -36,7 +36,7 @@ async function appOrigin() {
 }
 
 export async function invitePortalMember(formData: FormData) {
-  const session = await requirePortalOwner();
+  const session = await requirePortalPremiumOwner();
   const l = normalizeUiLanguage(formData.get("uiLanguage") ?? session.language);
   const email = clean(formData.get("email")).toLowerCase();
 
@@ -81,7 +81,7 @@ export async function invitePortalMember(formData: FormData) {
 }
 
 export async function resendPortalMemberInvite(formData: FormData) {
-  const session = await requirePortalOwner();
+  const session = await requirePortalPremiumOwner();
   const l = normalizeUiLanguage(formData.get("uiLanguage") ?? session.language);
   const userId = clean(formData.get("userId"), 100);
   if (!userId) return;
@@ -123,7 +123,7 @@ export async function resendPortalMemberInvite(formData: FormData) {
 }
 
 export async function removePortalMember(formData: FormData) {
-  const session = await requirePortalOwner();
+  const session = await requirePortalPremiumOwner();
   const l = normalizeUiLanguage(formData.get("uiLanguage") ?? session.language);
   const userId = clean(formData.get("userId"), 100);
   if (!userId) return;

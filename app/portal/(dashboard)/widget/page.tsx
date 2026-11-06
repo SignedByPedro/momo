@@ -7,13 +7,13 @@ import { getClientWidgetConfig, WIDGET_PANEL_MIN_WIDTH, WIDGET_PANEL_MAX_WIDTH, 
 import CopyInstallCode from "@/app/admin/(dashboard)/clients/[id]/widget/CopyInstallCode";
 import WidgetAppearanceEditor from "@/app/admin/(dashboard)/clients/[id]/widget/WidgetAppearanceEditor";
 import { saveClientWidgetConfig, toggleClientWidgetPublication } from "@/app/admin/(dashboard)/clients/[id]/widget/actions";
-import { requirePortalOwner } from "@/lib/portal/auth";
+import { requirePortalPremiumOwner } from "@/lib/portal/auth";
 import { tr } from "@/lib/i18n/ui";
 
 type Props = { searchParams: Promise<{ notice?: string; error?: string }> };
 
 export default async function ClientWidgetPage({ searchParams }: Props) {
-  const session = await requirePortalOwner();
+  const session = await requirePortalPremiumOwner();
   const id = session.organizationId;
   const l = session.language;
   const query = await searchParams;

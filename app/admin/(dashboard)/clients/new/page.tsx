@@ -1,6 +1,7 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import Link from "next/link";
 import { createClient } from "../actions";
+import { organizationPlanOptions } from "@/lib/plans";
 
 export default function NewClientPage() {
   return (
@@ -11,7 +12,7 @@ export default function NewClientPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-[#ff8a32]">Nova organização</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Criar cliente</h1>
         <p className="mt-2 text-sm leading-6 text-white/40">
-          Cria a organização base. Depois podes configurar a Knowledge Base, o agente, o widget e os acessos antes de ativar o cliente.
+          Cria a organização e escolhe o plano inicial. O plano pode ser alterado a qualquer momento no perfil do cliente, sem apagar configurações existentes.
         </p>
       </div>
 
@@ -45,6 +46,30 @@ export default function NewClientPage() {
             <option value="en">English</option>
           </select>
         </label>
+
+        <fieldset className="grid gap-3">
+          <legend className="text-xs text-white/45">Plano</legend>
+          <div className="grid gap-3 md:grid-cols-3">
+            {organizationPlanOptions.map((plan) => (
+              <label key={plan.value} className="cursor-pointer">
+                <input
+                  className="peer sr-only"
+                  type="radio"
+                  name="plan"
+                  value={plan.value}
+                  defaultChecked={plan.value === "base"}
+                />
+                <span className="block h-full rounded-2xl border border-white/[0.08] bg-[#101010] p-4 transition peer-checked:border-[#ff7a18]/55 peer-checked:bg-[#ff7a18]/[0.06]">
+                  <span className="block text-sm font-semibold text-white/85">{plan.label}</span>
+                  <span className="mt-2 block text-xs leading-5 text-white/35">{plan.description}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="text-[11px] leading-5 text-white/25">
+            Base inclui Dashboard, Conversations e Knowledge. Premium desbloqueia as restantes funcionalidades atuais. Business inclui Premium e fica preparado para funcionalidades personalizadas por orçamento.
+          </p>
+        </fieldset>
 
         <div className="rounded-2xl border border-white/[0.06] bg-[#101010] px-4 py-3 text-xs leading-5 text-white/35">
           O novo cliente começa no estado “Configuração”. Só o vamos marcar como “Ativo” quando o agente estiver pronto para utilização real.

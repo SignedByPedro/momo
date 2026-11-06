@@ -108,8 +108,8 @@ export async function syncSingleLanguageAgentLanguage(
       )
     : [];
 
-  // A single-language configuration is the base-plan behaviour. If the Admin
-  // has explicitly enabled multiple languages, preserve that upgraded setup.
+  // Keep single-language configurations aligned with the organization primary
+  // language. If Admin explicitly enabled multiple languages, preserve them.
   if (current.length > 1) return;
   if (current.length === 1 && current[0] === language) return;
 

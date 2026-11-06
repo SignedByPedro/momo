@@ -95,6 +95,7 @@ async function convertLeadToClient(leadId: string) {
       business_type: lead.business_type,
       country: null,
       primary_language: primaryLanguage,
+      plan: "base",
       status: "setup",
       updated_at: now,
     })

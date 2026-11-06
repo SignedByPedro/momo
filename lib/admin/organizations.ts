@@ -1,4 +1,5 @@
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import type { OrganizationPlan } from "@/lib/plans";
 
 export type OrganizationStatus =
   | "setup"
@@ -16,6 +17,7 @@ export type OrganizationRow = {
   business_type: string | null;
   country: string | null;
   primary_language: OrganizationLanguage;
+  plan: OrganizationPlan;
   status: OrganizationStatus;
   member_limit: number;
   terminated_at: string | null;
@@ -29,7 +31,7 @@ export type OrganizationRow = {
 };
 
 const organizationSelect =
-  "id, name, slug, website, business_type, country, primary_language, status, member_limit, terminated_at, recovery_until, termination_reason, status_before_termination, terminated_by_user_id, terminated_by_email, created_at, updated_at";
+  "id, name, slug, website, business_type, country, primary_language, plan, status, member_limit, terminated_at, recovery_until, termination_reason, status_before_termination, terminated_by_user_id, terminated_by_email, created_at, updated_at";
 
 export async function getOrganizations() {
   const supabase = createSupabaseAdmin();

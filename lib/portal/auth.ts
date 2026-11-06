@@ -4,6 +4,10 @@ import type { OrganizationStatus } from "@/lib/admin/organizations";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { tr, type UiLanguage } from "@/lib/i18n/ui";
+import {
+  organizationPlanHasPremiumFeatures,
+  type OrganizationPlan,
+} from "@/lib/plans";
 
 export type PortalRole = "client_owner" | "client_member";
 
@@ -14,6 +18,7 @@ export type PortalSession = {
   organizationId: string;
   organizationName: string;
   organizationStatus: OrganizationStatus;
+  plan: OrganizationPlan;
   terminatedAt: string | null;
   recoveryUntil: string | null;
   role: PortalRole;
@@ -22,6 +27,18 @@ export type PortalSession = {
 
 export function portalServiceIsClosed(session: PortalSession) {
   return session.organizationStatus === "cancelled" || session.organizationStatus === "purge_due";
+}
+
+export function portalHasPremiumAccess(session: PortalSession) {
+  return organizationPlanHasPremiumFeatures(session.plan);
+}
+
+function premiumPlanMessage(language: UiLanguage) {
+  return tr(
+    language,
+    "Esta funcionalidade está disponível nos planos Premium e Business.",
+    "This feature is available on Premium and Business plans.",
+  );
 }
 
 export async function getPortalSession(): Promise<PortalSession | null> {
@@ -42,11 +59,18 @@ export async function getPortalSession(): Promise<PortalSession | null> {
 
   const { data: organization, error: organizationError } = await admin
     .from("organizations")
-    .select("id, name, primary_language, status, terminated_at, recovery_until")
+    .select("id, name, primary_language, plan, status, terminated_at, recovery_until")
     .eq("id", membership.organization_id)
     .maybeSingle();
 
   if (organizationError || !organization || !membership.accepted_at) return null;
+
+  const plan: OrganizationPlan =
+    organization.plan === "business"
+      ? "business"
+      : organization.plan === "premium"
+        ? "premium"
+        : "base";
 
   return {
     userId: user.id,
@@ -55,6 +79,7 @@ export async function getPortalSession(): Promise<PortalSession | null> {
     organizationId: membership.organization_id,
     organizationName: organization.name,
     organizationStatus: organization.status as OrganizationStatus,
+    plan,
     terminatedAt: organization.terminated_at ?? null,
     recoveryUntil: organization.recovery_until ?? null,
     role: membership.role === "client_owner" ? "client_owner" : "client_member",
@@ -76,8 +101,25 @@ export async function requirePortalOperational(): Promise<PortalSession> {
   return session;
 }
 
+export async function requirePortalPremium(): Promise<PortalSession> {
+  const session = await requirePortalOperational();
+  if (!portalHasPremiumAccess(session)) {
+    redirect(`/portal?error=${encodeURIComponent(premiumPlanMessage(session.language))}`);
+  }
+  return session;
+}
+
 export async function requirePortalOwner(): Promise<PortalSession> {
   const session = await requirePortalOperational();
+  if (session.role !== "client_owner") {
+    const message = tr(session.language, "Sem permissão para alterar a configuração.", "You do not have permission to change the configuration.");
+    redirect(`/portal?error=${encodeURIComponent(message)}`);
+  }
+  return session;
+}
+
+export async function requirePortalPremiumOwner(): Promise<PortalSession> {
+  const session = await requirePortalPremium();
   if (session.role !== "client_owner") {
     const message = tr(session.language, "Sem permissão para alterar a configuração.", "You do not have permission to change the configuration.");
     redirect(`/portal?error=${encodeURIComponent(message)}`);
@@ -110,6 +152,14 @@ export async function requireOrganizationOwnerAccess(organizationId: string) {
   return access;
 }
 
+export async function requireOrganizationPremiumOwnerAccess(organizationId: string) {
+  const access = await requireOrganizationOwnerAccess(organizationId);
+  if (access.surface === "portal" && !portalHasPremiumAccess(access.portal)) {
+    redirect(`/portal?error=${encodeURIComponent(premiumPlanMessage(access.portal.language))}`);
+  }
+  return access;
+}
+
 export async function canPreviewOrganization(organizationId: string) {
   const admin = await getAdminSession();
   if (admin) return true;
@@ -118,6 +168,7 @@ export async function canPreviewOrganization(organizationId: string) {
     portal &&
       portal.organizationId === organizationId &&
       portal.role === "client_owner" &&
-      !portalServiceIsClosed(portal),
+      !portalServiceIsClosed(portal) &&
+      portalHasPremiumAccess(portal),
   );
 }
