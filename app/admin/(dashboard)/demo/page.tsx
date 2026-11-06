@@ -31,11 +31,23 @@ export default async function DemoAdminPage() {
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] text-[#ff8a32]">Demo</p>
-      <h1 className="mt-1 text-3xl font-semibold tracking-tight">{tr(l, "Estudo de mercado", "Market study")}</h1>
-      <p className="mt-2 text-sm text-white/40">
-        {tr(l, "Respostas recolhidas na página /demo.", "Answers collected on the /demo page.")}
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[#ff8a32]">Demo</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{tr(l, "Estudo de mercado", "Market study")}</h1>
+          <p className="mt-2 text-sm text-white/40">
+            {tr(l, "Respostas recolhidas na página /demo.", "Answers collected on the /demo page.")}
+          </p>
+        </div>
+        {!missing && sessions.length > 0 && (
+          <a
+            href="/api/admin/demo/export"
+            className="rounded-xl border border-white/[0.09] px-4 py-2.5 text-sm text-white/65 transition hover:border-[#ff7a18]/30 hover:text-[#ff9a4d]"
+          >
+            {tr(l, "Exportar Excel", "Export Excel")}
+          </a>
+        )}
+      </div>
 
       {missing && (
         <div className="mt-6 rounded-2xl border border-[#ff8426]/20 bg-[#ff8426]/[0.08] px-4 py-3 text-sm leading-6 text-white/75">

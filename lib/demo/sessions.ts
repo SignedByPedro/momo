@@ -174,15 +174,16 @@ export async function getDemoSession(id: string) {
   return readSession(id);
 }
 
-export async function listDemoSessions() {
+export async function listDemoSessions(options?: { limit?: number }) {
   const supabase = createSupabaseAdmin();
+  const limit = Math.min(Math.max(options?.limit ?? 200, 1), 5000);
   const { data, error } = await supabase
     .from("demo_sessions")
     .select(
       "id, created_at, updated_at, completed_at, language, phase, visitor_name, questions_seen, price_band, interested, email, free_conversation_id",
     )
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(limit);
 
   if (error) throw storageError(error);
   return (data ?? []).map((row) => mapRow({ ...(row as DemoSessionRow), transcript: [] }));
