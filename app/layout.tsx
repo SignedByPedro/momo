@@ -14,6 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt" style={{ background: "transparent", backgroundColor: "transparent" }}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body style={{ background: "transparent", backgroundColor: "transparent" }}>
         <AppInteractionFeedback />
         {children}
