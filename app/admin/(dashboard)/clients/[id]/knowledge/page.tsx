@@ -1,5 +1,6 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import ClientAgentTester from "@/components/testing/ClientAgentTester";
+import DocumentKnowledgeImporter from "@/components/knowledge/DocumentKnowledgeImporter";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -88,10 +89,11 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
         </div>
       )}
 
-      <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {[
           ["Total", stats.total, "Entradas de conhecimento"],
-          ["Website", stats.website, "Importadas automaticamente"],
+          ["Website", stats.website, "Importadas do website"],
+          ["Documentos", stats.document, "Importadas de ficheiros"],
           ["Publicadas", stats.published, "Disponíveis ao agente"],
           ["Indexadas", stats.indexed, "Prontas para pesquisa semântica"],
         ].map(([label, value, note]) => (
@@ -105,9 +107,11 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
 
       {!client.website && (
         <div className="mt-6 rounded-2xl border border-amber-300/15 bg-amber-300/[0.04] px-4 py-3 text-sm leading-6 text-amber-100/75">
-          Este cliente ainda não tem website. Podes adicionar informação manualmente agora ou voltar aos dados do cliente para guardar um website.
+          Este cliente ainda não tem website. Podes importar um documento ou adicionar informação manualmente.
         </div>
       )}
+
+      <DocumentKnowledgeImporter organizationId={id} language={client.primary_language === "en" ? "en" : "pt"} />
 
       <section className="mt-6 rounded-3xl border border-white/[0.07] bg-[#151515] p-6 sm:p-8">
         <div>
@@ -164,7 +168,7 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
       <section className="mt-6 space-y-3">
         {entries.length === 0 ? (
           <div className="rounded-2xl border border-white/[0.07] bg-[#151515] px-5 py-12 text-center text-sm text-white/35">
-            Ainda não existe conhecimento para este cliente. Analisa o website ou adiciona a primeira entrada manualmente.
+            Ainda não existe conhecimento para este cliente. Analisa o website, importa um documento ou adiciona a primeira entrada manualmente.
           </div>
         ) : (
           entries.map((entry) => (
@@ -177,7 +181,7 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
                       {entry.status === "draft" ? "Rascunho" : entry.visibility === "internal" ? "Interno" : "Publicado"}
                     </span>
                     <span className="rounded-full border border-white/[0.07] px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-white/35">
-                      {entry.source_type === "website" ? "Website" : "Manual"}
+                      {entry.source_type === "website" ? "Website" : entry.source_type === "document" ? "Documento" : "Manual"}
                     </span>
                   </div>
                   <p className="mt-1 truncate text-xs text-white/30">
@@ -203,7 +207,7 @@ export default async function ClientKnowledgePage({ params, searchParams }: Prop
                   </div>
                   {entry.source_url && (
                     <p className="break-all rounded-xl border border-white/[0.05] bg-[#101010] px-3 py-2 text-xs text-white/30">
-                      Fonte original: {entry.source_url}
+                      {entry.source_type === "document" ? "Ficheiro original" : "Fonte original"}: {entry.source_url}
                     </p>
                   )}
                   <div>

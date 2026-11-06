@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireOrganizationOwnerAccess } from "@/lib/portal/auth";
+import { requireOrganizationPremiumOwnerAccess } from "@/lib/portal/auth";
 import { getOrganization } from "@/lib/admin/organizations";
 import {
   type WidgetAvatarStyle,
@@ -87,7 +87,7 @@ async function uploadWidgetImage(
 export async function saveClientWidgetConfig(formData: FormData) {
   const organizationId = clean(formData.get("organizationId"), 100);
   if (!organizationId) return;
-  const access = await requireOrganizationOwnerAccess(organizationId);
+  const access = await requireOrganizationPremiumOwnerAccess(organizationId);
   const language = access.portal?.language ?? "pt";
   const primaryColor = clean(formData.get("primaryColor"), 20).toUpperCase();
   const secondaryColor = clean(formData.get("secondaryColor"), 20).toUpperCase();
@@ -201,7 +201,7 @@ export async function saveClientWidgetConfig(formData: FormData) {
 export async function toggleClientWidgetPublication(formData: FormData) {
   const organizationId = clean(formData.get("organizationId"), 100);
   if (!organizationId) return;
-  const access = await requireOrganizationOwnerAccess(organizationId);
+  const access = await requireOrganizationPremiumOwnerAccess(organizationId);
   const language = access.portal?.language ?? "pt";
   const enabled = clean(formData.get("enabled"), 10) === "true";
 

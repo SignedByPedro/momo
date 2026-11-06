@@ -1,4 +1,4 @@
-import { getPortalSession, portalServiceIsClosed } from "@/lib/portal/auth";
+import { getPortalSession, portalHasPremiumAccess, portalServiceIsClosed } from "@/lib/portal/auth";
 import { getOrganization } from "@/lib/admin/organizations";
 import {
   applyTesterKnowledgeAction,
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (!requestHasTrustedOrigin(req)) return jsonError("Request origin is not allowed.", 403);
   const session = await getPortalSession();
   if (!session) return jsonError("Unauthorized", 401);
-  if (session.role !== "client_owner" || portalServiceIsClosed(session)) return jsonError("Forbidden", 403);
+  if (session.role !== "client_owner" || portalServiceIsClosed(session) || !portalHasPremiumAccess(session)) return jsonError("Forbidden", 403);
 
   const id = session.organizationId;
   const organization = await getOrganization(id);

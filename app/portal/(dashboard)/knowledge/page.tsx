@@ -1,9 +1,10 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import ClientAgentTester from "@/components/testing/ClientAgentTester";
+import DocumentKnowledgeImporter from "@/components/knowledge/DocumentKnowledgeImporter";
 import Link from "next/link";
 import { getClientKnowledgeEntries, getClientKnowledgeStats } from "@/lib/admin/client-knowledge";
 import { getOrganization } from "@/lib/admin/organizations";
-import { requirePortalOwner } from "@/lib/portal/auth";
+import { portalHasPremiumAccess, requirePortalOwner } from "@/lib/portal/auth";
 import { tr } from "@/lib/i18n/ui";
 import { analyzeClientWebsite, reindexClientKnowledge, saveClientKnowledgeEntry } from "@/app/admin/(dashboard)/clients/[id]/knowledge/actions";
 import PortalKnowledgeEntries from "./PortalKnowledgeEntries";

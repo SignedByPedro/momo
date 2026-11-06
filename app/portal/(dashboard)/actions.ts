@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requirePortalOperational } from "@/lib/portal/auth";
+import { requirePortalPremium } from "@/lib/portal/auth";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -15,7 +15,7 @@ export async function portalLogout() {
 }
 
 export async function updatePortalLeadStatus(formData: FormData) {
-  const session = await requirePortalOperational();
+  const session = await requirePortalPremium();
   const leadId = String(formData.get("leadId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
 

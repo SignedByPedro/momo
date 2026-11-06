@@ -2,6 +2,7 @@ import Link from "next/link";
 import OrganizationStatusBadge from "@/components/admin/OrganizationStatusBadge";
 import StatCard from "@/components/admin/StatCard";
 import { getArchivedClientCount, getOrganizations } from "@/lib/admin/organizations";
+import { organizationPlanLabel } from "@/lib/plans";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-PT", { dateStyle: "short" }).format(new Date(value));
@@ -56,12 +57,13 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[980px] text-left text-sm">
               <thead className="border-b border-white/[0.06] text-[11px] uppercase tracking-[0.12em] text-white/30">
                 <tr>
                   <th className="px-5 py-3 font-medium">Empresa</th>
                   <th className="px-5 py-3 font-medium">Tipo</th>
                   <th className="px-5 py-3 font-medium">Idioma</th>
+                  <th className="px-5 py-3 font-medium">Plano</th>
                   <th className="px-5 py-3 font-medium">Estado</th>
                   <th className="px-5 py-3 font-medium">Criado</th>
                   <th className="px-5 py-3 font-medium" />
@@ -76,6 +78,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                     </td>
                     <td className="px-5 py-4 text-white/60">{client.business_type || "—"}</td>
                     <td className="px-5 py-4 uppercase text-white/55">{client.primary_language}</td>
+                    <td className="px-5 py-4"><span className="rounded-full border border-[#ff7a18]/15 bg-[#ff7a18]/[0.04] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#ffad6b]">{organizationPlanLabel(client.plan)}</span></td>
                     <td className="px-5 py-4"><OrganizationStatusBadge status={client.status} /></td>
                     <td className="px-5 py-4 text-xs text-white/40">{formatDate(client.created_at)}</td>
                     <td className="px-5 py-4 text-right">

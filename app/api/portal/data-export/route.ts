@@ -85,7 +85,7 @@ export async function GET() {
     ] = await Promise.all([
       supabase
         .from("organizations")
-        .select("id, name, slug, website, business_type, country, primary_language, status, member_limit, terminated_at, recovery_until, termination_reason, created_at, updated_at")
+        .select("id, name, slug, website, business_type, country, primary_language, plan, status, member_limit, terminated_at, recovery_until, termination_reason, created_at, updated_at")
         .eq("id", organizationId)
         .maybeSingle(),
       supabase

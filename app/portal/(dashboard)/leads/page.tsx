@@ -1,11 +1,11 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
-import { requirePortal } from "@/lib/portal/auth";
+import { requirePortalPremium } from "@/lib/portal/auth";
 import { getPortalLeads } from "@/lib/portal/data";
 import { dateLocale, tr } from "@/lib/i18n/ui";
 import { updatePortalLeadStatus } from "../actions";
 
 export default async function PortalLeadsPage() {
-  const session = await requirePortal();
+  const session = await requirePortalPremium();
   const leads = await getPortalLeads(session.organizationId);
   const l = session.language;
   const formatDate = (value: string) => new Intl.DateTimeFormat(dateLocale(l), { dateStyle: "short", timeStyle: "short" }).format(new Date(value));

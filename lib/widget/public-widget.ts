@@ -1,10 +1,11 @@
-import { getClientAgentConfig } from "@/lib/admin/agents";
+import { getClientAgentConfig, type ClientAgentConfig } from "@/lib/admin/agents";
 import { getOrganization } from "@/lib/admin/organizations";
 import {
   type ClientWidgetConfig,
   getClientWidgetConfig,
 } from "@/lib/admin/widgets";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { organizationPlanHasPremiumFeatures } from "@/lib/plans";
 
 export type PublicWidgetBundle = {
   organization: NonNullable<Awaited<ReturnType<typeof getOrganization>>>;
@@ -39,5 +40,20 @@ export async function getPublicWidgetBundle(
   if (["paused", "cancelled", "purge_due"].includes(organization.status)) return null;
   if (!widget.is_enabled || widget.public_key !== key) return null;
 
-  return { organization, agent, widget };
+  // Base keeps the live Momo experience, but lead capture is a Premium/Business
+  // capability. Apply the restriction at runtime without mutating the saved
+  // configuration, so an upgrade restores the previous setup immediately.
+  let effectiveAgent: ClientAgentConfig = agent;
+  if (!organizationPlanHasPremiumFeatures(organization.plan)) {
+    const goals: ClientAgentConfig["goals"] = agent.goals.filter(
+      (goal) => goal !== "generate_leads",
+    );
+    effectiveAgent = {
+      ...agent,
+      contact_capture_mode: "disabled",
+      goals: goals.length > 0 ? goals : ["answer_questions"],
+    };
+  }
+
+  return { organization, agent: effectiveAgent, widget };
 }

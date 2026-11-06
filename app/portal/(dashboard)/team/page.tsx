@@ -1,12 +1,12 @@
 import FormSubmitButton from "@/app/_components/FormSubmitButton";
 import Link from "next/link";
 import { getOrganizationMemberUsage, getOrganizationMembers } from "@/lib/admin/members";
-import { requirePortalOwner } from "@/lib/portal/auth";
+import { requirePortalPremiumOwner } from "@/lib/portal/auth";
 import { dateLocale, tr } from "@/lib/i18n/ui";
 import { invitePortalMember, removePortalMember, resendPortalMemberInvite } from "./actions";
 
 export default async function PortalTeamPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const session = await requirePortalOwner();
+  const session = await requirePortalPremiumOwner();
   const query = await searchParams;
   const [members, usage] = await Promise.all([getOrganizationMembers(session.organizationId), getOrganizationMemberUsage(session.organizationId)]);
   const l = session.language;

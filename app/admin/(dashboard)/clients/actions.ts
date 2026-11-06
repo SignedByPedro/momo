@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/auth";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type { OrganizationLanguage, OrganizationStatus } from "@/lib/admin/organizations";
 import { syncDefaultAgentPlaceholder, syncSingleLanguageAgentLanguage } from "@/lib/admin/agents";
+import { isOrganizationPlan, organizationPlanLabel, type OrganizationPlan } from "@/lib/plans";
 
 const normalStatuses = new Set<OrganizationStatus>(["setup", "active", "paused"]);
 const allStatuses = new Set<OrganizationStatus>([
@@ -71,9 +72,11 @@ export async function createClient(formData: FormData) {
   const businessType = clean(formData.get("businessType"), 120) || null;
   const country = clean(formData.get("country"), 120) || null;
   const language = clean(formData.get("primaryLanguage"), 10) as OrganizationLanguage;
+  const plan = clean(formData.get("plan"), 20) as OrganizationPlan;
 
   if (!name) throw new Error("O nome da empresa é obrigatório.");
   if (!allowedLanguages.has(language)) throw new Error("Idioma inválido.");
+  if (!isOrganizationPlan(plan)) throw new Error("Plano inválido.");
 
   const website = normalizeWebsite(websiteInput);
   if (websiteInput && !website) throw new Error("O website não é válido.");
@@ -91,6 +94,7 @@ export async function createClient(formData: FormData) {
       business_type: businessType,
       country,
       primary_language: language,
+      plan,
       status: "setup",
       updated_at: now,
     })
@@ -115,10 +119,12 @@ export async function updateClient(formData: FormData) {
   const country = clean(formData.get("country"), 120) || null;
   const language = clean(formData.get("primaryLanguage"), 10) as OrganizationLanguage;
   const status = clean(formData.get("status"), 20) as OrganizationStatus;
+  const plan = clean(formData.get("plan"), 20) as OrganizationPlan;
   const memberLimit = Number.parseInt(clean(formData.get("memberLimit"), 4), 10);
 
   if (!id || !name) throw new Error("Dados do cliente incompletos.");
   if (!allowedLanguages.has(language)) throw new Error("Idioma inválido.");
+  if (!isOrganizationPlan(plan)) throw new Error("Plano inválido.");
   if (!allStatuses.has(status)) throw new Error("Estado inválido.");
   if (!Number.isInteger(memberLimit) || memberLimit < 1 || memberLimit > 1000) throw new Error("O limite de utilizadores deve estar entre 1 e 1000.");
 
@@ -128,7 +134,7 @@ export async function updateClient(formData: FormData) {
   const supabase = createSupabaseAdmin();
   const { data: existing, error: existingError } = await supabase
     .from("organizations")
-    .select("status")
+    .select("status, plan")
     .eq("id", id)
     .maybeSingle();
   if (existingError) throw existingError;
@@ -160,6 +166,7 @@ export async function updateClient(formData: FormData) {
       business_type: businessType,
       country,
       primary_language: language,
+      plan,
       status,
       member_limit: memberLimit,
       updated_at: new Date().toISOString(),
@@ -169,7 +176,7 @@ export async function updateClient(formData: FormData) {
   if (error) throw error;
 
   // Admin is the only surface that can change the primary language. Keep
-  // base-plan agents in sync without replacing paid multilingual entitlements.
+  // single-language agents in sync without replacing multilingual configurations.
   await Promise.all([
     syncDefaultAgentPlaceholder(id, language),
     syncSingleLanguageAgentLanguage(id, language),
@@ -179,7 +186,19 @@ export async function updateClient(formData: FormData) {
   revalidatePath(`/admin/clients/${id}`);
   revalidatePath(`/admin/clients/${id}/agent`);
   revalidatePath(`/admin/clients/${id}/widget`);
-  redirect(`/admin/clients/${id}?notice=${encodeURIComponent("Alterações guardadas com sucesso.")}`);
+  revalidatePath("/portal", "layout");
+
+  const previousPlan = isOrganizationPlan(String(existing.plan ?? ""))
+    ? (existing.plan as OrganizationPlan)
+    : "premium";
+  const planChanged = previousPlan !== plan;
+  const notice = planChanged
+    ? plan === "base"
+      ? `Plano alterado para ${organizationPlanLabel(plan)}. As funcionalidades Premium ficam bloqueadas no portal, mas os dados/configurações existentes são preservados para um futuro upgrade.`
+      : `Plano alterado para ${organizationPlanLabel(plan)}. O novo acesso fica disponível no portal imediatamente.`
+    : "Alterações guardadas com sucesso.";
+
+  redirect(`/admin/clients/${id}?notice=${encodeURIComponent(notice)}`);
 }
 
 export async function scheduleClientTermination(formData: FormData) {

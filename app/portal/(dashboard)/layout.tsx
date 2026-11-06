@@ -10,6 +10,7 @@ import { requestOrganizationDataDeletion } from "./settings/actions";
 import { tr } from "@/lib/i18n/ui";
 import { getServerTimeMs } from "@/lib/server-time";
 import { getUnreadSupportTicketIds } from "@/lib/support/unread";
+import { organizationPlanLabel } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <div className="shrink-0"><MomoIcon size={36} /></div>
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">{session.organizationName}</div>
-              <div className="text-[11px] text-white/35">{tr(session.language, "Portal de IA", "Customer AI portal")}</div>
+              <div className="text-[11px] text-white/35">{tr(session.language, "Portal de IA", "Customer AI portal")} · {organizationPlanLabel(session.plan)}</div>
             </div>
           </div>
 
@@ -57,7 +58,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
         </div>
         <div className="mx-auto max-w-7xl overflow-x-auto px-5 pb-3 lg:px-8">
-          <PortalNav role={session.role} language={session.language} serviceClosed={serviceClosed} initialUnreadCount={unreadSupport.length} />
+          <PortalNav role={session.role} language={session.language} plan={session.plan} serviceClosed={serviceClosed} initialUnreadCount={unreadSupport.length} />
         </div>
       </header>
 

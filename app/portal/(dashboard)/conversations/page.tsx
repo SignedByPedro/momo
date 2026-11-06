@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { getClientConversations } from "@/lib/admin/client-conversations";
-import { requirePortal } from "@/lib/portal/auth";
+import { portalHasPremiumAccess, requirePortal } from "@/lib/portal/auth";
 import { dateLocale, tr } from "@/lib/i18n/ui";
 
 export default async function PortalConversationsPage() {
   const session = await requirePortal();
   const conversations = await getClientConversations(session.organizationId);
+  const premiumAccess = portalHasPremiumAccess(session);
   const l = session.language;
   const formatDate = (value: string) => new Intl.DateTimeFormat(dateLocale(l), { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 
@@ -28,7 +29,7 @@ export default async function PortalConversationsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-white/85">{conversation.visitor_name || tr(l, "Visitante anónimo", "Anonymous visitor")}</span>
-                  {conversation.hasLead && <span className="rounded-full border border-[#ff7a18]/20 bg-[#ff7a18]/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#ff9a4d]">Lead</span>}
+                  {premiumAccess && conversation.hasLead && <span className="rounded-full border border-[#ff7a18]/20 bg-[#ff7a18]/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#ff9a4d]">Lead</span>}
                   <span className="rounded-full border border-white/[0.07] px-2 py-0.5 text-[10px] uppercase text-white/30">{conversation.language || "—"}</span>
                 </div>
                 <p className="mt-2 truncate text-sm text-white/45">{conversation.lastMessage || tr(l, "Sem mensagens", "No messages")}</p>

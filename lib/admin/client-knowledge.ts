@@ -2,7 +2,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
 export type ClientKnowledgeVisibility = "public" | "internal";
 export type ClientKnowledgeStatus = "draft" | "published";
-export type ClientKnowledgeSource = "manual" | "website";
+export type ClientKnowledgeSource = "manual" | "website" | "document";
 
 export type ClientKnowledgeEntry = {
   id: string;
@@ -42,6 +42,7 @@ export async function getClientKnowledgeStats(organizationId: string) {
     total: entries.length,
     published: entries.filter((entry) => entry.status === "published").length,
     website: entries.filter((entry) => entry.source_type === "website").length,
+    document: entries.filter((entry) => entry.source_type === "document").length,
     indexed: entries.filter((entry) => Boolean(entry.embedding)).length,
   };
 }
