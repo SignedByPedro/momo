@@ -77,7 +77,7 @@ export async function sendNewMomoLeadNotification(input: LeadNotificationInput) 
     : "";
 
   const html = `
-    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Inter,Arial,sans-serif;color:#f5f5f5;">
+    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Arial,Helvetica,sans-serif;color:#f5f5f5;">
       <div style="max-width:560px;margin:0 auto;border:1px solid #292929;border-radius:18px;background:#171717;padding:28px;">
         <div style="display:inline-block;margin-bottom:18px;border-radius:999px;background:#ff7a181a;padding:6px 10px;color:#ff9b50;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Momo · Nova lead</div>
         <h1 style="margin:0 0 8px;font-size:24px;line-height:1.25;color:#ffffff;">Entrou uma nova oportunidade 👋</h1>

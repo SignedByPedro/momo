@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   QUESTION_IDS,
-  cleanEmail,
+  cleanContact,
   cleanName,
   demoCopy,
   isDemoPhase,
@@ -88,10 +88,15 @@ function mapRow(row: DemoSessionRow): DemoSessionState {
 }
 
 function storageError(error: { message?: string; code?: string }) {
+  const message = error.message ?? "";
+  if (error.code === "23514" || message.includes("check constraint")) {
+    return new DemoFlowError(500, "Could not save the demo.");
+  }
   const missing =
     error.code === "42P01" ||
     error.code === "PGRST205" ||
-    (error.message ?? "").includes("demo_sessions");
+    (message.includes("demo_sessions") &&
+      (message.includes("does not exist") || message.includes("Could not find")));
   if (missing) {
     return new DemoFlowError(503, "Demo storage is not ready.");
   }
@@ -269,12 +274,12 @@ export async function submitDemoPrice(id: string, band: PriceBand) {
   return commitOrCurrent(
     session,
     withClock(session, {
-      phase: "awaiting_interest",
+      phase: "awaiting_email",
       priceBand: band,
       transcript: [
         ...session.transcript,
         turn("user", priceLabel(band), now),
-        turn("assistant", text.interestQuestion, now),
+        turn("assistant", text.emailAsk, now),
       ],
     }),
   );
@@ -292,7 +297,9 @@ function openFreeChat(session: DemoSessionState, handoff: string, at: string): P
 export async function submitDemoInterest(id: string, interested: boolean) {
   const session = await readSession(id);
   if (!session) throw new DemoFlowError(404, "Demo session not found.");
-  if (session.phase !== "awaiting_interest") return { session, conflict: true as const };
+  if (session.phase !== "awaiting_interest" && session.phase !== "awaiting_email") {
+    return { session, conflict: true as const };
+  }
 
   const now = new Date().toISOString();
   const text = demoCopy(session.language);
@@ -329,7 +336,7 @@ export async function submitDemoEmail(id: string, rawEmail: string) {
   const now = new Date().toISOString();
   const text = demoCopy(session.language);
   const spoken = rawEmail.replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, 180);
-  const email = cleanEmail(rawEmail);
+  const email = cleanContact(rawEmail);
   const name = session.visitorName ?? "";
 
   if (!email) {
@@ -350,6 +357,7 @@ export async function submitDemoEmail(id: string, rawEmail: string) {
     session,
     withClock(session, {
       email,
+      interested: true,
       transcript,
       ...openFreeChat({ ...session, transcript }, text.handoffYes(name), now),
     }),

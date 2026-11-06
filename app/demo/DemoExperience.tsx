@@ -2,36 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import ChatMessage from "@/components/momo/ChatMessage";
 import LauncherChatGlyph, { LAUNCHER_ICON_RATIO } from "@/components/momo/LauncherChatGlyph";
 import MomoIcon from "@/components/momo/MomoIcon";
-import { demoCopy, type DemoLanguage, type DemoView } from "@/lib/demo/script";
+import { demoCopy, type DemoView } from "@/lib/demo/script";
 import styles from "./demo.module.css";
 
-const LANGUAGE_STORAGE_KEY = "momo-language";
-const LANGUAGE_CHANGE_EVENT = "momo-language-change";
 const SESSION_STORAGE_KEY = "momo-demo-session";
 const LAUNCHER_SIZE = 60;
-
-function subscribeToLanguage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  window.addEventListener(LANGUAGE_CHANGE_EVENT, onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener(LANGUAGE_CHANGE_EVENT, onChange);
-  };
-}
-
-function getClientLanguage(): DemoLanguage {
-  const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (stored === "en" || stored === "pt") return stored;
-  return window.navigator.language.toLowerCase().startsWith("en") ? "en" : "pt";
-}
-
-function getServerLanguage(): DemoLanguage {
-  return "pt";
-}
+const LANGUAGE = "pt" as const;
 
 function isUuid(value: string | null): value is string {
   return Boolean(
@@ -101,7 +81,6 @@ function CloseGlyph() {
 }
 
 export default function DemoExperience() {
-  const preferredLanguage = useSyncExternalStore(subscribeToLanguage, getClientLanguage, getServerLanguage);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<DemoView | null>(null);
   const [typed, setTyped] = useState(0);
@@ -125,8 +104,7 @@ export default function DemoExperience() {
     window.sessionStorage.setItem(SESSION_STORAGE_KEY, view.sessionId);
   }, [view]);
 
-  const language = view?.language ?? preferredLanguage;
-  const text = demoCopy(language);
+  const text = demoCopy(LANGUAGE);
   const chatBusy = status === "submitted" || status === "streaming";
   const heroPhrase = `${text.heroLead}${text.heroAccent}`;
   const shownLead = launcherVisible ? text.heroLead : text.heroLead.slice(0, typed);
@@ -216,6 +194,11 @@ export default function DemoExperience() {
     void requestDemo({ method: "GET", sessionId: stored })
       .then((session) => {
         if (cancelled) return;
+        if (session.language !== LANGUAGE) {
+          window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+          setIntroGate("play");
+          return;
+        }
         setView(session);
         if (session.phase === "awaiting_name") {
           setIntroGate("play");
@@ -272,26 +255,10 @@ export default function DemoExperience() {
     };
   }, [messages, setMessages, status]);
 
-  function chooseLanguage(next: DemoLanguage) {
-    if (view) return;
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
-    window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
-  }
-
   function failureMessage(statusCode: number) {
-    if (statusCode === 503) {
-      return language === "en"
-        ? "The demo is not connected to the database yet."
-        : "O demo ainda não está ligado à base de dados.";
-    }
-    if (statusCode === 429) {
-      return language === "en"
-        ? "Too many attempts. Wait a moment and try again."
-        : "Demasiadas tentativas. Espera um momento e tenta novamente.";
-    }
-    return language === "en"
-      ? "I couldn't continue right now. Try again in a moment."
-      : "Não consegui continuar agora. Tenta novamente dentro de momentos.";
+    if (statusCode === 503) return "O demo ainda não está ligado à base de dados.";
+    if (statusCode === 429) return "Demasiadas tentativas. Espera um momento e tenta novamente.";
+    return "Não consegui continuar agora. Tenta novamente dentro de momentos.";
   }
 
   async function run(body: unknown) {
@@ -320,7 +287,7 @@ export default function DemoExperience() {
     setBusy(true);
     setError("");
     try {
-      setView(await requestDemo({ body: { action: "start", language } }));
+      setView(await requestDemo({ body: { action: "start", language: LANGUAGE } }));
     } catch (requestError) {
       const statusCode = requestError instanceof DemoRequestError ? requestError.status : 500;
       setError(failureMessage(statusCode));
@@ -352,7 +319,7 @@ export default function DemoExperience() {
       await run({ action: "price", sessionId: view.sessionId, priceBand: id });
       return;
     }
-    if (view.phase === "awaiting_interest") {
+    if (view.phase === "awaiting_interest" || (view.phase === "awaiting_email" && id === "no")) {
       await run({ action: "interest", sessionId: view.sessionId, interested: id === "yes" });
     }
   }
@@ -369,7 +336,7 @@ export default function DemoExperience() {
         {
           body: {
             conversationId: view.freeConversationId,
-            language: view.language,
+            language: LANGUAGE,
             demoSessionId: view.sessionId,
           },
         },
@@ -400,26 +367,6 @@ export default function DemoExperience() {
 
   return (
     <main className={styles.root}>
-      {launcherVisible && (
-      <header className={`momo-sales-topbar ${styles.reveal}`}>
-        {!view && (
-          <div className="momo-sales-language" role="group" aria-label={language === "en" ? "Language" : "Idioma"}>
-            {(["pt", "en"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => chooseLanguage(option)}
-                className={language === option ? "is-active" : undefined}
-                aria-pressed={language === option}
-              >
-                {option.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        )}
-      </header>
-      )}
-
       <div className={styles.copy}>
         <h1 className={styles.title} aria-label={`${text.heroLead.trim()} ${text.heroAccent}`}>
           {typed > 0 && (
@@ -430,18 +377,12 @@ export default function DemoExperience() {
           )}
           {typed > text.heroLead.length && (
             <span>
-              <span className="momo-sales-title-accent">{shownAccent}</span>
+              <span className={styles.accent}>{shownAccent}</span>
               {stillTyping && <i className={styles.caret} aria-hidden="true" />}
             </span>
           )}
         </h1>
       </div>
-
-      {launcherVisible && (
-        <a className={`${styles.privacy} ${styles.reveal}`} href="/legal/privacy">
-          {language === "en" ? "Privacy" : "Privacidade"}
-        </a>
-      )}
 
       {open && (
         <section className="momo-chat-panel fixed bottom-24 right-4 z-50 flex h-[min(650px,calc(100vh-120px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-white/[0.085] bg-[#111]/95 shadow-[0_30px_90px_rgba(0,0,0,0.48)] backdrop-blur-xl sm:right-7">
@@ -452,13 +393,13 @@ export default function DemoExperience() {
                 <div className="text-sm font-semibold tracking-[-0.01em]">Momo</div>
                 <div className="flex items-center gap-1.5 text-[11px] text-white/45">
                   <span className="momo-online-dot h-1.5 w-1.5 rounded-full" />
-                  {language === "en" ? "AI assistant · Online" : "Assistente de IA · Online"}
+                  Assistente de IA · Online
                 </div>
               </div>
             </div>
             <button
               type="button"
-              aria-label={language === "en" ? "Close chat" : "Fechar chat"}
+              aria-label="Fechar chat"
               onClick={() => setOpen(false)}
               className="grid h-8 w-8 place-items-center rounded-full text-white/45 transition hover:bg-white/[0.07] hover:text-white"
             >
@@ -529,6 +470,21 @@ export default function DemoExperience() {
               onSubmit={(event) => void (view.inputMode === "free" ? submitFree(event) : submitGuided(event))}
               className="border-t border-white/[0.07] p-3"
             >
+              {view.inputMode !== "free" && view.suggestions.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {view.suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void chooseSuggestion(suggestion.id)}
+                      className="momo-quick-action rounded-full px-3 py-1.5 text-xs transition disabled:opacity-40"
+                    >
+                      {suggestion.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="momo-input-shell flex items-end gap-2 rounded-[19px] p-1.5 pl-3">
                 <textarea
                   rows={1}
@@ -547,7 +503,7 @@ export default function DemoExperience() {
                 <button
                   type="submit"
                   disabled={!input.trim() || busy || chatBusy}
-                  aria-label={language === "en" ? "Send message" : "Enviar mensagem"}
+                  aria-label="Enviar mensagem"
                   className="momo-send-button grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-[#18110c] transition disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -573,7 +529,7 @@ export default function DemoExperience() {
             )}
             <button
               type="button"
-              aria-label={open ? (language === "en" ? "Close Momo" : "Fechar Momo") : (language === "en" ? "Open Momo" : "Abrir Momo")}
+              aria-label={open ? "Fechar Momo" : "Abrir Momo"}
               aria-expanded={open}
               onClick={() => void openChat()}
               className={`momo-launcher ${open ? "is-open" : ""}`}

@@ -12,7 +12,7 @@ function formatDate(value: string, language: "pt" | "en") {
 
 function interestLabel(session: DemoSessionState, language: "pt" | "en") {
   if (session.interested === true) return tr(language, "Sim", "Yes");
-  if (session.interested === false) return tr(language, "Ainda não", "Not yet");
+  if (session.interested === false) return tr(language, "Não estou interessado", "Not interested");
   return "—";
 }
 
@@ -61,7 +61,7 @@ export default async function DemoAdminPage() {
                     <th className="px-5 py-3 font-medium">{tr(l, "Nome", "Name")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Valor", "Price")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Interesse", "Interest")}</th>
-                    <th className="px-5 py-3 font-medium">Email</th>
+                    <th className="px-5 py-3 font-medium">{tr(l, "Contacto", "Contact")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Fase", "Stage")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Data", "Date")}</th>
                   </tr>

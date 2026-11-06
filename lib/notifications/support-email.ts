@@ -43,7 +43,7 @@ export async function sendNewSupportTicketNotification(input: SupportNotificatio
   const reference = supportTicketReference(input.ticketId);
 
   const html = `
-    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Inter,Arial,sans-serif;color:#f5f5f5;">
+    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Arial,Helvetica,sans-serif;color:#f5f5f5;">
       <div style="max-width:580px;margin:0 auto;border:1px solid #292929;border-radius:18px;background:#171717;padding:28px;">
         <div style="display:inline-block;margin-bottom:18px;border-radius:999px;background:#ff7a181a;padding:6px 10px;color:#ff9b50;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Momo · Support</div>
         <h1 style="margin:0 0 8px;font-size:23px;line-height:1.3;color:#fff;">Novo pedido ${escapeHtml(reference)}</h1>
@@ -114,7 +114,7 @@ export async function sendSupportReplyNotification(input: SupportReplyNotificati
   const button = english ? "Open request →" : "Abrir pedido →";
 
   const html = `
-    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Inter,Arial,sans-serif;color:#f5f5f5;">
+    <div style="margin:0;background:#0f0f0f;padding:32px 18px;font-family:Arial,Helvetica,sans-serif;color:#f5f5f5;">
       <div style="max-width:580px;margin:0 auto;border:1px solid #292929;border-radius:18px;background:#171717;padding:28px;">
         <div style="display:inline-block;margin-bottom:18px;border-radius:999px;background:#ff7a181a;padding:6px 10px;color:#ff9b50;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Momo · Support</div>
         <h1 style="margin:0 0 8px;font-size:23px;line-height:1.3;color:#fff;">${escapeHtml(heading)}</h1>

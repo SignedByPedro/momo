@@ -10,10 +10,10 @@ export type DemoPhase =
   | "awaiting_email"
   | "free";
 
-export const QUESTION_IDS = ["what", "purpose", "why"] as const;
+export const QUESTION_IDS = ["purpose", "why", "what"] as const;
 export type QuestionId = (typeof QUESTION_IDS)[number];
 
-export const PRICE_BANDS = ["50-99", "100-149", "150-200"] as const;
+export const PRICE_BANDS = ["25-49", "50-99", "100-149", "150-200"] as const;
 export type PriceBand = (typeof PRICE_BANDS)[number];
 
 export type DemoTranscriptTurn = {
@@ -62,31 +62,30 @@ const copy = {
     greeting: "Olá, eu sou o Momo, e tu, como te chamas?",
     nameRetry: "Não apanhei o nome. Como te chamas?",
     namePlaceholder: "O teu nome",
-    afterName: (name: string) =>
-      `Prazer, ${name}. Escolhe uma pergunta — explico-te o que é o Momo, para que serve e porque pode ser útil.`,
+    afterName: (name: string) => `Prazer, ${name}. O que queres saber sobre mim?`,
     questions: {
-      what: "O que é o Momo?",
-      purpose: "Para que serve?",
-      why: "Porque é que me seria útil?",
+      purpose: "Para que serves?",
+      why: "Porque é que isso seria útil para mim?",
+      what: "Então, no fundo, és um chatbot?",
     },
     answers: {
-      what: "O Momo é um assistente de IA para organizações. Fica no site e conversa com quem procura a empresa, em português ou inglês, usando a informação dessa organização.",
       purpose:
-        "Serve para responder a perguntas frequentes, explicar o que a empresa oferece, recolher um contacto quando alguém quer mesmo ser contactado, e passar à equipa o que precisa de uma pessoa. Não confirma marcações, encomendas ou stock se isso não estiver mesmo ligado.",
-      why: "Quem chega ao site pode ser atendido na hora, a qualquer hora, nas perguntas que se repetem. A equipa fica com o histórico e com os contactos que valem acompanhamento.",
+        "Eu sou um serviço de IA para o teu negócio que automatiza conversas com clientes e tarefas repetitivas de atendimento. Posso responder a perguntas com informação da tua empresa, orientar os teus visitantes, captar informação de potenciais novos clientes, responder a dúvidas e encaminhar situações mais complexas para a tua equipa. Tudo isto de forma automática, sem complicações e sem atritos, poupando o teu tempo.",
+      why: "Ser-te-ia útil para reduzir o tempo gasto em tarefas repetitivas e garantir que os teus clientes obtêm respostas mesmo quando tu ou a tua equipa não estão disponíveis. Eu também consigo orientar os visitantes do teu site, recolher contactos de potenciais clientes e encaminhar para a equipa os casos que exigem atenção humana. Resumindo, mantenho o teu negócio a correr de forma eficiente, mesmo quando não tens disponibilidade.",
+      what: "Sou muito mais do que isso. Funciono com inteligência artificial, por isso não respondo de forma básica nem com textos pré-formatados. Para além disso, vais ter um portal onde podes moldar a minha linguagem, dar-me o conhecimento que quiseres sobre o teu negócio e até personalizar a minha aparência, tanto na janela de chat como no botão que aparece no teu website. Sou um assistente do teu negócio. Faço parte da tua equipa.",
     },
     priceQuestion:
-      "Se o Momo tratasse destas conversas na tua empresa, que valor mensal te parecia justo?",
+      "Se eu trabalhasse contigo, que valor mensal te pareceria justo?",
     interestQuestion: "E ficavas interessado em usar o Momo?",
     yes: "Sim",
-    no: "Ainda não",
-    emailAsk: "Deixa o teu email. Assim a equipa pode falar contigo.",
-    emailRetry: "Esse email não parece válido. Podes confirmá-lo?",
-    emailPlaceholder: "O teu email",
+    no: "Não estou interessado",
+    emailAsk: "Se ficaste interessado ou se queres saber mais, deixa o teu contacto de email ou número de telefone.",
+    emailRetry: "Esse contacto não parece válido. Podes deixar um email ou um número de telefone?",
+    emailPlaceholder: "O teu email ou telefone",
     handoffYes: (name: string) =>
-      `Obrigado, ${name}. Se quiseres, experimenta agora o chat à vontade e pergunta o que quiseres sobre o Momo.`,
+      `Obrigado, ${name}. Se quiseres, experimenta agora o chat à vontade e pergunta o que quiseres sobre mim.`,
     handoffNo: (name: string) =>
-      `Percebo, ${name}. Se quiseres na mesma, experimenta o chat e pergunta o que quiseres sobre o Momo.`,
+      `Percebo, ${name}. Se quiseres na mesma, experimenta o chat e pergunta o que quiseres sobre mim.`,
     choose: "Escolhe uma opção",
     freePlaceholder: "Pergunta o que quiseres sobre o Momo...",
     phases: {
@@ -94,7 +93,7 @@ const copy = {
       exploring: "A explorar",
       awaiting_price: "À espera do valor",
       awaiting_interest: "À espera do interesse",
-      awaiting_email: "À espera do email",
+      awaiting_email: "À espera do contacto",
       free: "Chat livre",
     },
   },
@@ -105,31 +104,30 @@ const copy = {
     greeting: "Hi, I'm Momo, and you, what's your name?",
     nameRetry: "I didn't catch your name. What should I call you?",
     namePlaceholder: "Your name",
-    afterName: (name: string) =>
-      `Nice to meet you, ${name}. Pick a question — I'll explain what Momo is, what it's for, and why it can be useful.`,
+    afterName: (name: string) => `Nice to meet you, ${name}. What do you want to know about me?`,
     questions: {
-      what: "What is Momo?",
-      purpose: "What is it for?",
-      why: "Why would it be useful to me?",
+      purpose: "What are you for?",
+      why: "Why would that be useful to me?",
+      what: "So, basically, you're a chatbot?",
     },
     answers: {
-      what: "Momo is an AI assistant for organizations. It lives on the website and talks with the people who reach out, in Portuguese or English, using that organization's information.",
       purpose:
-        "It answers common questions, explains what the organization offers, collects a contact when someone actually wants to be reached, and passes to the team anything that needs a person. It does not confirm bookings, orders or stock unless that connection really exists.",
-      why: "People who arrive on the site can be answered immediately, at any hour, on the questions that repeat. The team keeps the history and the contacts that are worth following up.",
+        "I am an AI service for your business that automates customer conversations and repetitive support tasks. I can answer questions with your company's information, guide your visitors, capture details from potential new customers, handle common doubts and pass more complex situations to your team. All of that automatically, without friction, so you get your time back.",
+      why: "It would be useful to cut the time spent on repetitive questions and make sure your customers get answers even when you or your team are not available. I can also guide the people who arrive on your site, collect contacts from potential customers and hand the team the cases that need a person. In short, I keep your business moving even when you are not free.",
+      what: "I'm much more than that. I run on artificial intelligence, so I don't answer in a basic or pre-formatted way. On top of that, you'll get a portal where you can shape my language, give me the knowledge you want about your business, and even personalise how I look — both in the chat window and on the button that appears on your website. I'm an assistant for your business. I'm part of your team.",
     },
     priceQuestion:
-      "If Momo handled these conversations for your organization, what monthly price would feel fair?",
+      "If Momo handled these conversations for your business, what monthly price would feel fair?",
     interestQuestion: "Would you be interested in using Momo?",
     yes: "Yes",
-    no: "Not yet",
-    emailAsk: "Leave your email and the team can talk to you.",
-    emailRetry: "That email doesn't look valid. Can you check it?",
-    emailPlaceholder: "Your email",
+    no: "I'm not interested",
+    emailAsk: "If you're interested or want to know more, leave your email or phone number.",
+    emailRetry: "That contact doesn't look valid. You can leave an email or a phone number.",
+    emailPlaceholder: "Your email or phone",
     handoffYes: (name: string) =>
-      `Thanks, ${name}. If you want, try the chat freely now and ask whatever you like about Momo.`,
+      `Thanks, ${name}. If you want, try the chat freely now and ask whatever you like about me.`,
     handoffNo: (name: string) =>
-      `I understand, ${name}. If you still want to, try the chat and ask whatever you like about Momo.`,
+      `I understand, ${name}. If you still want to, try the chat and ask whatever you like about me.`,
     choose: "Choose an option",
     freePlaceholder: "Ask whatever you like about Momo...",
     phases: {
@@ -137,7 +135,7 @@ const copy = {
       exploring: "Exploring",
       awaiting_price: "Waiting for a price",
       awaiting_interest: "Waiting for interest",
-      awaiting_email: "Waiting for an email",
+      awaiting_email: "Waiting for a contact",
       free: "Free chat",
     },
   },
@@ -180,7 +178,18 @@ export function cleanEmail(value: string) {
   return email;
 }
 
+export function cleanPhone(value: string) {
+  const compact = value.trim().replace(/[().\-\s]/g, "");
+  if (!/^\+?\d{8,15}$/.test(compact)) return null;
+  return compact;
+}
+
+export function cleanContact(value: string) {
+  return cleanEmail(value) ?? cleanPhone(value);
+}
+
 export function priceLabel(band: PriceBand) {
+  if (band === "25-49") return "25–49 €";
   if (band === "50-99") return "50–99 €";
   if (band === "100-149") return "100–149 €";
   return "150–200 €";
@@ -194,10 +203,9 @@ export function suggestionsFor(session: DemoSessionState): DemoSuggestion[] {
   const text = copy[session.language];
 
   if (session.phase === "exploring") {
-    return QUESTION_IDS.filter((id) => !session.questionsSeen.includes(id)).map((id) => ({
-      id,
-      label: text.questions[id],
-    }));
+    const next = QUESTION_IDS.find((id) => !session.questionsSeen.includes(id));
+    if (!next) return [];
+    return [{ id: next, label: text.questions[next] }];
   }
 
   if (session.phase === "awaiting_price") {
@@ -209,6 +217,10 @@ export function suggestionsFor(session: DemoSessionState): DemoSuggestion[] {
       { id: "yes", label: text.yes },
       { id: "no", label: text.no },
     ];
+  }
+
+  if (session.phase === "awaiting_email") {
+    return [{ id: "no", label: text.no }];
   }
 
   return [];

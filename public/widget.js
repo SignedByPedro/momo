@@ -55,7 +55,7 @@
   hoverLabel.style.border = "1px solid rgba(255,255,255,.08)";
   hoverLabel.style.background = "#171717";
   hoverLabel.style.color = "#B8B8B8";
-  hoverLabel.style.fontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  hoverLabel.style.fontFamily = "Arial, Helvetica, sans-serif";
   hoverLabel.style.fontSize = "12px";
   hoverLabel.style.lineHeight = "18px";
   hoverLabel.style.boxShadow = "0 8px 24px rgba(0,0,0,.22)";

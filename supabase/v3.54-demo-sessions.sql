@@ -20,7 +20,7 @@ create table if not exists public.demo_sessions (
   )),
   visitor_name text check (visitor_name is null or char_length(visitor_name) between 1 and 80),
   questions_seen text[] not null default '{}',
-  price_band text check (price_band is null or price_band in ('50-99', '100-149', '150-200')),
+  price_band text check (price_band is null or price_band in ('25-49', '50-99', '100-149', '150-200')),
   interested boolean,
   email text check (email is null or char_length(email) between 3 and 180),
   transcript jsonb not null default '[]'::jsonb,

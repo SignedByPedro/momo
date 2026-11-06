@@ -1,5 +1,6 @@
 .root {
-  --momo-rounded-font: ui-rounded, "SF Pro Rounded", "Avenir Next Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  --momo-rounded-font: Arial, Helvetica, sans-serif;
+  --momo-title-font: "Rubik", sans-serif;
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -19,9 +20,11 @@
 .title {
   margin: 0;
   color: rgba(255, 255, 255, 0.96);
-  font-family: var(--momo-rounded-font);
+  font-family: var(--momo-title-font);
+  font-optical-sizing: auto;
+  font-style: normal;
   font-size: clamp(56px, 6.2vw, 96px);
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: -0.07em;
   line-height: 0.94;
 }
@@ -29,6 +32,24 @@
 .title > span {
   display: flex;
   align-items: center;
+}
+
+.accent {
+  display: inline-block;
+  padding-right: 0.06em;
+  padding-bottom: 0.08em;
+  background-image: linear-gradient(
+    112deg,
+    #fff6e8 0%,
+    #ffe0b0 22%,
+    #ffb049 48%,
+    #ff9229 72%,
+    #f06808 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 118, 20, 0.07));
 }
 
 .caret {

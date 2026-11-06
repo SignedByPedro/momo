@@ -34,7 +34,7 @@ export default async function DemoDetailPage({ params }: { params: Promise<{ id:
     session.interested === true
       ? tr(l, "Sim", "Yes")
       : session.interested === false
-        ? tr(l, "Ainda não", "Not yet")
+        ? tr(l, "Não estou interessado", "Not interested")
         : "—";
 
   return (
@@ -60,7 +60,7 @@ export default async function DemoDetailPage({ params }: { params: Promise<{ id:
             <p className="mt-2 text-sm text-white/80">{interest}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.12em] text-white/30">Email</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-white/30">{tr(l, "Contacto", "Contact")}</p>
             <p className="mt-2 break-all text-sm text-white/80">{session.email || "—"}</p>
           </div>
         </div>
