@@ -1,6 +1,7 @@
 .root {
   --momo-rounded-font: Arial, Helvetica, sans-serif;
   --momo-title-font: "Rubik", sans-serif;
+  --demo-gutter: clamp(28px, 7vw, 96px);
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -12,7 +13,7 @@
   position: absolute;
   z-index: 2;
   top: 46%;
-  left: clamp(28px, 7vw, 96px);
+  left: var(--demo-gutter);
   width: min(720px, 54vw);
   transform: translateY(-50%);
 }
@@ -79,7 +80,7 @@
 .privacy {
   position: absolute;
   z-index: 2;
-  left: clamp(28px, 7vw, 96px);
+  left: var(--demo-gutter);
   bottom: 28px;
   color: rgba(255, 255, 255, 0.28);
   font-size: 12px;
@@ -104,6 +105,65 @@
   pointer-events: none;
 }
 
+.invite {
+  margin-top: 0.34em;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: var(--momo-title-font);
+  font-size: 0.36em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.trail {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chevrons {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.chevrons:hover {
+  color: #fff;
+}
+
+.chevron {
+  --chevron-rotate: 0deg;
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(-50%) rotate(var(--chevron-rotate));
+  transform-origin: center center;
+  animation: chevronPulse 3.4s ease-in-out infinite both;
+}
+
+.chevronDown {
+  left: var(--demo-gutter);
+  --chevron-rotate: 90deg;
+}
+
+.chevron svg {
+  display: block;
+  width: 42px;
+  height: 42px;
+}
+
 .nudge {
   position: absolute;
   right: calc(100% + 14px);
@@ -119,6 +179,8 @@
   line-height: 1;
   padding: 10px 14px;
   white-space: nowrap;
+  opacity: 0;
+  animation: nudgeIn 0.45s ease forwards 1.85s;
 }
 
 .nudge:hover {
@@ -126,12 +188,63 @@
   color: #fff;
 }
 
+@keyframes chevronPulse {
+  0%, 100% {
+    opacity: 0.06;
+    color: #000;
+    transform: translateY(-50%) rotate(var(--chevron-rotate));
+  }
+  38% {
+    opacity: 0.55;
+    color: #fff;
+    transform: translateY(-50%) rotate(var(--chevron-rotate));
+  }
+  50% {
+    opacity: 0.7;
+    color: #ff9a4d;
+    transform: translateY(-50%) rotate(var(--chevron-rotate));
+  }
+  62% {
+    opacity: 0.55;
+    color: #ff7a18;
+    transform: translateY(-50%) rotate(var(--chevron-rotate));
+  }
+}
+
+@keyframes nudgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
 @keyframes pulse {
   0% { transform: scale(1); opacity: 0.75; }
   100% { transform: scale(1.45); opacity: 0; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    opacity: 0.55;
+    animation: none;
+    transform: translateY(-50%) rotate(var(--chevron-rotate));
+  }
+
+  .nudge {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 @media (max-width: 899px) {
+  .root {
+    --demo-gutter: 22px;
+  }
+
   .copy {
     position: relative;
     top: auto;
@@ -139,7 +252,7 @@
     width: auto;
     max-width: 640px;
     margin: 0;
-    padding: 18vh 22px 0;
+    padding: 18vh var(--demo-gutter) 0;
     transform: none;
   }
 
@@ -147,8 +260,12 @@
     font-size: clamp(46px, 13vw, 68px);
   }
 
+  .invite {
+    font-size: 0.38em;
+  }
+
   .privacy {
-    left: 22px;
+    left: var(--demo-gutter);
     bottom: 22px;
   }
 }

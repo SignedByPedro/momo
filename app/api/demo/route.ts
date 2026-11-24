@@ -1,6 +1,7 @@
 import {
   presentDemo,
   startDemoSession,
+  submitDemoCompanySize,
   submitDemoEmail,
   submitDemoInterest,
   submitDemoName,
@@ -9,7 +10,7 @@ import {
   DemoFlowError,
   getDemoSession,
 } from "@/lib/demo/sessions";
-import { isPriceBand, isQuestionId, type DemoLanguage } from "@/lib/demo/script";
+import { isCompanySizeBand, isPriceBand, isQuestionId, type DemoLanguage } from "@/lib/demo/script";
 import {
   chatResponseHeaders,
   consumeRateLimit,
@@ -28,6 +29,7 @@ type DemoRequestBody = {
   language?: string;
   name?: string;
   questionId?: string;
+  companySize?: string;
   priceBand?: string;
   interested?: boolean;
   email?: string;
@@ -127,6 +129,9 @@ async function applyAction(sessionId: string, body: DemoRequestBody) {
     case "question":
       if (!isQuestionId(body.questionId)) throw new DemoFlowError(400, "Unknown question.");
       return submitDemoQuestion(sessionId, body.questionId);
+    case "company_size":
+      if (!isCompanySizeBand(body.companySize)) throw new DemoFlowError(400, "Unknown company size.");
+      return submitDemoCompanySize(sessionId, body.companySize);
     case "price":
       if (!isPriceBand(body.priceBand)) throw new DemoFlowError(400, "Unknown price.");
       return submitDemoPrice(sessionId, body.priceBand);

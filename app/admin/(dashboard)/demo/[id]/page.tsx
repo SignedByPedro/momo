@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getConversation } from "@/lib/admin/data";
 import { getDemoSession, isDemoTableMissing } from "@/lib/demo/sessions";
-import { demoPhaseLabel, priceLabel } from "@/lib/demo/script";
+import { companySizeLabel, demoPhaseLabel, priceLabel } from "@/lib/demo/script";
 import { dateLocale, tr } from "@/lib/i18n/ui";
 import { validConversationId } from "@/lib/security/request-security";
 
@@ -50,7 +50,13 @@ export default async function DemoDetailPage({ params }: { params: Promise<{ id:
           {formatDate(session.createdAt, l)} · {demoPhaseLabel(session.phase, l)}
         </p>
 
-        <div className="mt-8 grid gap-6 border-t border-white/[0.07] pt-7 sm:grid-cols-3">
+        <div className="mt-8 grid gap-6 border-t border-white/[0.07] pt-7 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.12em] text-white/30">{tr(l, "Dimensão", "Company size")}</p>
+            <p className="mt-2 text-sm text-white/80">
+              {session.companySize ? companySizeLabel(session.companySize) : "—"}
+            </p>
+          </div>
           <div>
             <p className="text-xs uppercase tracking-[0.12em] text-white/30">{tr(l, "Valor mensal", "Monthly price")}</p>
             <p className="mt-2 text-sm text-white/80">{session.priceBand ? priceLabel(session.priceBand) : "—"}</p>

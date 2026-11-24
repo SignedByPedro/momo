@@ -5,6 +5,7 @@ export type DemoLanguage = UiLanguage;
 export type DemoPhase =
   | "awaiting_name"
   | "exploring"
+  | "awaiting_company_size"
   | "awaiting_price"
   | "awaiting_interest"
   | "awaiting_email"
@@ -13,7 +14,10 @@ export type DemoPhase =
 export const QUESTION_IDS = ["purpose", "why", "what"] as const;
 export type QuestionId = (typeof QUESTION_IDS)[number];
 
-export const PRICE_BANDS = ["25-49", "50-99", "100-149", "150-200"] as const;
+export const COMPANY_SIZE_BANDS = ["1-5", "6-20", "21-50", "51-200", "201+"] as const;
+export type CompanySizeBand = (typeof COMPANY_SIZE_BANDS)[number];
+
+export const PRICE_BANDS = ["0-25", "25-49", "50-99", "100-149", "150-200"] as const;
 export type PriceBand = (typeof PRICE_BANDS)[number];
 
 export type DemoTranscriptTurn = {
@@ -47,6 +51,7 @@ export type DemoSessionState = {
   phase: DemoPhase;
   visitorName: string | null;
   questionsSeen: QuestionId[];
+  companySize: CompanySizeBand | null;
   priceBand: PriceBand | null;
   interested: boolean | null;
   email: string | null;
@@ -58,6 +63,7 @@ const copy = {
   pt: {
     heroLead: "Olá, este é o ",
     heroAccent: "Momo",
+    heroInvite: "VAMOS FALAR?",
     nudge: "Carrega aqui",
     greeting: "Olá, eu sou o Momo, e tu, como te chamas?",
     nameRetry: "Não apanhei o nome. Como te chamas?",
@@ -70,12 +76,13 @@ const copy = {
     },
     answers: {
       purpose:
-        "Eu sou um serviço de IA para o teu negócio que automatiza conversas com clientes e tarefas repetitivas de atendimento. Posso responder a perguntas com informação da tua empresa, orientar os teus visitantes, captar informação de potenciais novos clientes, responder a dúvidas e encaminhar situações mais complexas para a tua equipa. Tudo isto de forma automática, sem complicações e sem atritos, poupando o teu tempo.",
-      why: "Ser-te-ia útil para reduzir o tempo gasto em tarefas repetitivas e garantir que os teus clientes obtêm respostas mesmo quando tu ou a tua equipa não estão disponíveis. Eu também consigo orientar os visitantes do teu site, recolher contactos de potenciais clientes e encaminhar para a equipa os casos que exigem atenção humana. Resumindo, mantenho o teu negócio a correr de forma eficiente, mesmo quando não tens disponibilidade.",
-      what: "Sou muito mais do que isso. Funciono com inteligência artificial, por isso não respondo de forma básica nem com textos pré-formatados. Para além disso, vais ter um portal onde podes moldar a minha linguagem, dar-me o conhecimento que quiseres sobre o teu negócio e até personalizar a minha aparência, tanto na janela de chat como no botão que aparece no teu website. Sou um assistente do teu negócio. Faço parte da tua equipa.",
+        "Sou um serviço de IA para o teu negócio: automatizo conversas com clientes e tarefas repetitivas de atendimento.\n\nConsigo:\n• responder com informação da tua empresa\n• orientar os visitantes do site\n• captar contactos de potenciais clientes\n• esclarecer dúvidas do dia a dia\n• encaminhar casos mais complexos para a tua equipa\n\nTudo automático, sem atritos e para poupar o teu tempo.",
+      why: "Ser-te-ia útil para te libertar a ti e à tua equipa de perguntas repetitivas e garantir respostas mesmo quando ninguém está disponível.\n\nNa prática:\n• oriento quem chega ao teu site\n• recolho contactos de potenciais clientes\n• passo à equipa só o que precisa de atenção humana\n\nResumindo: o negócio continua a correr, mesmo quando tu não tens disponibilidade.",
+      what: "Sou muito mais do que isso.\n\nFunciono com inteligência artificial, por isso não respondo de forma básica nem com textos pré-formatados.\n\nNo portal podes:\n• moldar a minha linguagem\n• dar-me o conhecimento do teu negócio\n• personalizar a aparência do chat e do botão no website\n\nSou um assistente do teu negócio. Faço parte da tua equipa.",
     },
+    companySizeQuestion: "Quantas pessoas trabalham na tua empresa?",
     priceQuestion:
-      "Se eu trabalhasse contigo, que valor mensal te pareceria justo?",
+      "Trabalhando de forma integrada na tua equipa, que valor estarias disposto a investir mensalmente?",
     interestQuestion: "E ficavas interessado em usar o Momo?",
     yes: "Sim",
     no: "Não estou interessado",
@@ -91,6 +98,7 @@ const copy = {
     phases: {
       awaiting_name: "À espera do nome",
       exploring: "A explorar",
+      awaiting_company_size: "À espera da dimensão",
       awaiting_price: "À espera do valor",
       awaiting_interest: "À espera do interesse",
       awaiting_email: "À espera do contacto",
@@ -100,6 +108,7 @@ const copy = {
   en: {
     heroLead: "Hi, this is ",
     heroAccent: "Momo",
+    heroInvite: "SHALL WE TALK?",
     nudge: "Tap here",
     greeting: "Hi, I'm Momo, and you, what's your name?",
     nameRetry: "I didn't catch your name. What should I call you?",
@@ -112,12 +121,13 @@ const copy = {
     },
     answers: {
       purpose:
-        "I am an AI service for your business that automates customer conversations and repetitive support tasks. I can answer questions with your company's information, guide your visitors, capture details from potential new customers, handle common doubts and pass more complex situations to your team. All of that automatically, without friction, so you get your time back.",
-      why: "It would be useful to cut the time spent on repetitive questions and make sure your customers get answers even when you or your team are not available. I can also guide the people who arrive on your site, collect contacts from potential customers and hand the team the cases that need a person. In short, I keep your business moving even when you are not free.",
-      what: "I'm much more than that. I run on artificial intelligence, so I don't answer in a basic or pre-formatted way. On top of that, you'll get a portal where you can shape my language, give me the knowledge you want about your business, and even personalise how I look — both in the chat window and on the button that appears on your website. I'm an assistant for your business. I'm part of your team.",
+        "I'm an AI service for your business: I automate customer conversations and repetitive support tasks.\n\nI can:\n• answer with your company's information\n• guide people on your site\n• capture contacts from potential customers\n• handle day-to-day questions\n• pass more complex cases to your team\n\nAll automatically, without friction — so you get time back.",
+      why: "It frees your team from repetitive questions and keeps answers flowing even when nobody is available.\n\nIn practice:\n• I guide people who land on your site\n• I collect contacts from potential customers\n• I hand your team only what needs a person\n\nIn short: the business keeps moving even when you're not free.",
+      what: "I'm much more than that.\n\nI run on artificial intelligence, so I don't answer in a basic or pre-formatted way.\n\nIn the portal you can:\n• shape my language\n• give me knowledge about your business\n• personalise the chat and the button on your website\n\nI'm an assistant for your business. I'm part of your team.",
     },
+    companySizeQuestion: "How many people work at your company?",
     priceQuestion:
-      "If Momo handled these conversations for your business, what monthly price would feel fair?",
+      "Working as part of your team, what monthly amount would you be willing to invest?",
     interestQuestion: "Would you be interested in using Momo?",
     yes: "Yes",
     no: "I'm not interested",
@@ -133,6 +143,7 @@ const copy = {
     phases: {
       awaiting_name: "Waiting for a name",
       exploring: "Exploring",
+      awaiting_company_size: "Waiting for company size",
       awaiting_price: "Waiting for a price",
       awaiting_interest: "Waiting for interest",
       awaiting_email: "Waiting for a contact",
@@ -149,6 +160,10 @@ export function isQuestionId(value: unknown): value is QuestionId {
   return QUESTION_IDS.includes(value as QuestionId);
 }
 
+export function isCompanySizeBand(value: unknown): value is CompanySizeBand {
+  return COMPANY_SIZE_BANDS.includes(value as CompanySizeBand);
+}
+
 export function isPriceBand(value: unknown): value is PriceBand {
   return PRICE_BANDS.includes(value as PriceBand);
 }
@@ -157,6 +172,7 @@ export function isDemoPhase(value: unknown): value is DemoPhase {
   return (
     value === "awaiting_name" ||
     value === "exploring" ||
+    value === "awaiting_company_size" ||
     value === "awaiting_price" ||
     value === "awaiting_interest" ||
     value === "awaiting_email" ||
@@ -188,7 +204,16 @@ export function cleanContact(value: string) {
   return cleanEmail(value) ?? cleanPhone(value);
 }
 
+export function companySizeLabel(band: CompanySizeBand) {
+  if (band === "201+") return "201+";
+  if (band === "1-5") return "1–5";
+  if (band === "6-20") return "6–20";
+  if (band === "21-50") return "21–50";
+  return "51–200";
+}
+
 export function priceLabel(band: PriceBand) {
+  if (band === "0-25") return "0–25 €";
   if (band === "25-49") return "25–49 €";
   if (band === "50-99") return "50–99 €";
   if (band === "100-149") return "100–149 €";
@@ -206,6 +231,10 @@ export function suggestionsFor(session: DemoSessionState): DemoSuggestion[] {
     const next = QUESTION_IDS.find((id) => !session.questionsSeen.includes(id));
     if (!next) return [];
     return [{ id: next, label: text.questions[next] }];
+  }
+
+  if (session.phase === "awaiting_company_size") {
+    return COMPANY_SIZE_BANDS.map((band) => ({ id: band, label: companySizeLabel(band) }));
   }
 
   if (session.phase === "awaiting_price") {

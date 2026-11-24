@@ -4,12 +4,15 @@ import {
   QUESTION_IDS,
   cleanContact,
   cleanName,
+  companySizeLabel,
   demoCopy,
+  isCompanySizeBand,
   isDemoPhase,
   isPriceBand,
   isQuestionId,
   priceLabel,
   toDemoView,
+  type CompanySizeBand,
   type DemoLanguage,
   type DemoSessionState,
   type DemoTranscriptTurn,
@@ -39,6 +42,7 @@ type DemoSessionRow = {
   phase: string;
   visitor_name: string | null;
   questions_seen: string[] | null;
+  company_size?: string | null;
   price_band: string | null;
   interested: boolean | null;
   email: string | null;
@@ -54,6 +58,7 @@ function mapRow(row: DemoSessionRow): DemoSessionState {
   const language: DemoLanguage = row.language === "en" ? "en" : "pt";
   const phase = isDemoPhase(row.phase) ? row.phase : "awaiting_name";
   const questionsSeen = (row.questions_seen ?? []).filter(isQuestionId);
+  const companySize = isCompanySizeBand(row.company_size) ? row.company_size : null;
   const priceBand = isPriceBand(row.price_band) ? row.price_band : null;
   const transcript = Array.isArray(row.transcript)
     ? row.transcript.flatMap((item) => {
@@ -79,6 +84,7 @@ function mapRow(row: DemoSessionRow): DemoSessionState {
     phase,
     visitorName: row.visitor_name,
     questionsSeen,
+    companySize,
     priceBand,
     interested: typeof row.interested === "boolean" ? row.interested : null,
     email: row.email,
@@ -125,6 +131,7 @@ async function saveSession(previous: DemoSessionState, next: DemoSessionState) {
       phase: next.phase,
       visitor_name: next.visitorName,
       questions_seen: next.questionsSeen,
+      company_size: next.companySize,
       price_band: next.priceBand,
       interested: next.interested,
       email: next.email,
@@ -180,7 +187,7 @@ export async function listDemoSessions(options?: { limit?: number }) {
   const { data, error } = await supabase
     .from("demo_sessions")
     .select(
-      "id, created_at, updated_at, completed_at, language, phase, visitor_name, questions_seen, price_band, interested, email, free_conversation_id",
+      "id, created_at, updated_at, completed_at, language, phase, visitor_name, questions_seen, company_size, price_band, interested, email, free_conversation_id",
     )
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -251,11 +258,11 @@ export async function submitDemoQuestion(id: string, questionId: QuestionId) {
   ];
 
   if (questionsSeen.length === QUESTION_IDS.length) {
-    transcript.push(turn("assistant", text.priceQuestion, now));
+    transcript.push(turn("assistant", text.companySizeQuestion, now));
     return commitOrCurrent(
       session,
       withClock(session, {
-        phase: "awaiting_price",
+        phase: "awaiting_company_size",
         questionsSeen,
         transcript,
       }),
@@ -263,6 +270,27 @@ export async function submitDemoQuestion(id: string, questionId: QuestionId) {
   }
 
   return commitOrCurrent(session, withClock(session, { questionsSeen, transcript }));
+}
+
+export async function submitDemoCompanySize(id: string, band: CompanySizeBand) {
+  const session = await readSession(id);
+  if (!session) throw new DemoFlowError(404, "Demo session not found.");
+  if (session.phase !== "awaiting_company_size") return { session, conflict: true as const };
+
+  const now = new Date().toISOString();
+  const text = demoCopy(session.language);
+  return commitOrCurrent(
+    session,
+    withClock(session, {
+      phase: "awaiting_price",
+      companySize: band,
+      transcript: [
+        ...session.transcript,
+        turn("user", companySizeLabel(band), now),
+        turn("assistant", text.priceQuestion, now),
+      ],
+    }),
+  );
 }
 
 export async function submitDemoPrice(id: string, band: PriceBand) {

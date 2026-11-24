@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
 import { isDemoTableMissing, listDemoSessions } from "@/lib/demo/sessions";
-import { demoPhaseLabel, priceLabel, type DemoSessionState } from "@/lib/demo/script";
+import { companySizeLabel, demoPhaseLabel, priceLabel, type DemoSessionState } from "@/lib/demo/script";
 import { dateLocale, tr } from "@/lib/i18n/ui";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +71,7 @@ export default async function DemoAdminPage() {
                 <thead className="border-b border-white/[0.06] text-[11px] uppercase tracking-[0.12em] text-white/30">
                   <tr>
                     <th className="px-5 py-3 font-medium">{tr(l, "Nome", "Name")}</th>
+                    <th className="px-5 py-3 font-medium">{tr(l, "Dimensão", "Size")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Valor", "Price")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Interesse", "Interest")}</th>
                     <th className="px-5 py-3 font-medium">{tr(l, "Contacto", "Contact")}</th>
@@ -85,6 +86,9 @@ export default async function DemoAdminPage() {
                         <Link href={`/admin/demo/${session.id}`} className="font-medium text-white hover:text-[#ff9a4d]">
                           {session.visitorName || tr(l, "Sem nome", "No name")}
                         </Link>
+                      </td>
+                      <td className="px-5 py-3 text-white/70">
+                        {session.companySize ? companySizeLabel(session.companySize) : "—"}
                       </td>
                       <td className="px-5 py-3 text-white/70">{session.priceBand ? priceLabel(session.priceBand) : "—"}</td>
                       <td className="px-5 py-3 text-white/70">{interestLabel(session, l)}</td>

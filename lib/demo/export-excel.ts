@@ -1,8 +1,11 @@
 import {
+  COMPANY_SIZE_BANDS,
   PRICE_BANDS,
   QUESTION_IDS,
+  companySizeLabel,
   demoPhaseLabel,
   priceLabel,
+  type CompanySizeBand,
   type DemoLanguage,
   type DemoSessionState,
   type PriceBand,
@@ -54,6 +57,7 @@ export function buildDemoStatsExcel(sessions: DemoSessionState[], language: Demo
     language === "en"
       ? [
           "Name",
+          "Company size",
           "Price",
           "Interest",
           "Contact",
@@ -68,6 +72,7 @@ export function buildDemoStatsExcel(sessions: DemoSessionState[], language: Demo
         ]
       : [
           "Nome",
+          "Dimensão",
           "Valor",
           "Interesse",
           "Contacto",
@@ -87,6 +92,7 @@ export function buildDemoStatsExcel(sessions: DemoSessionState[], language: Demo
       const [q1, q2, q3] = questionFlags(session);
       return row([
         cell(session.visitorName ?? ""),
+        cell(session.companySize ? companySizeLabel(session.companySize) : ""),
         cell(session.priceBand ? priceLabel(session.priceBand) : ""),
         cell(interestLabel(session, language)),
         cell(session.email ?? ""),
@@ -103,6 +109,7 @@ export function buildDemoStatsExcel(sessions: DemoSessionState[], language: Demo
   ];
 
   const priceCounts = countBy(sessions.map((session) => session.priceBand));
+  const sizeCounts = countBy(sessions.map((session) => session.companySize));
   const interestCounts = countBy(
     sessions.map((session) =>
       session.interested === true ? "yes" : session.interested === false ? "no" : "blank",
@@ -124,18 +131,34 @@ export function buildDemoStatsExcel(sessions: DemoSessionState[], language: Demo
       cell(language === "en" ? "Not interested" : "Não interessados"),
       cell(interestCounts.get("no") ?? 0, "Number"),
     ]),
+    ...COMPANY_SIZE_BANDS.map((band: CompanySizeBand) =>
+      row([
+        cell(language === "en" ? `Size ${companySizeLabel(band)}` : `Dimensão ${companySizeLabel(band)}`),
+        cell(sizeCounts.get(band) ?? 0, "Number"),
+      ]),
+    ),
     ...PRICE_BANDS.map((band: PriceBand) =>
       row([
         cell(language === "en" ? `Price ${priceLabel(band)}` : `Valor ${priceLabel(band)}`),
         cell(priceCounts.get(band) ?? 0, "Number"),
       ]),
     ),
-    ...["awaiting_name", "exploring", "awaiting_price", "awaiting_interest", "awaiting_email", "free"].map((phase) =>
+    ...(
+      [
+        "awaiting_name",
+        "exploring",
+        "awaiting_company_size",
+        "awaiting_price",
+        "awaiting_interest",
+        "awaiting_email",
+        "free",
+      ] as const
+    ).map((phase) =>
       row([
         cell(
           language === "en"
-            ? `Stage ${demoPhaseLabel(phase as DemoSessionState["phase"], "en")}`
-            : `Fase ${demoPhaseLabel(phase as DemoSessionState["phase"], "pt")}`,
+            ? `Stage ${demoPhaseLabel(phase, "en")}`
+            : `Fase ${demoPhaseLabel(phase, "pt")}`,
         ),
         cell(phaseCounts.get(phase) ?? 0, "Number"),
       ]),

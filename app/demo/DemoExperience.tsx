@@ -12,6 +12,63 @@ import styles from "./demo.module.css";
 const SESSION_STORAGE_KEY = "momo-demo-session";
 const LAUNCHER_SIZE = 60;
 const LANGUAGE = "pt" as const;
+const CHEVRON_STEP = 42;
+const CHEVRON_GAP_BELOW_INVITE = 20;
+const CHEVRON_BOTTOM = 52;
+const CHEVRON_RIGHT_PAD = 96;
+
+type ChevronPoint = { x: number; y: number; angle: 0 | 45 | 90 };
+
+function buildChevronPath(args: {
+  width: number;
+  height: number;
+  startX: number;
+  startY: number;
+}): ChevronPoint[] {
+  const { width, height, startX, startY } = args;
+  if (width < 80 || height < 80) return [];
+
+  const cornerY = Math.max(startY + CHEVRON_STEP, height - CHEVRON_BOTTOM);
+  const endX = Math.max(startX + CHEVRON_STEP, width - CHEVRON_RIGHT_PAD);
+  const verticalLen = Math.max(0, cornerY - startY);
+  const horizontalLen = Math.max(0, endX - startX);
+  const totalLen = verticalLen + horizontalLen;
+  if (totalLen < CHEVRON_STEP) return [];
+
+  const count = Math.max(2, Math.floor(totalLen / CHEVRON_STEP) + 1);
+  const points: ChevronPoint[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const distance = (index / (count - 1)) * totalLen;
+    if (distance <= verticalLen) {
+      points.push({ x: startX, y: startY + distance, angle: 90 });
+      continue;
+    }
+    const along = distance - verticalLen;
+    const nearCorner = along < CHEVRON_STEP * 0.6;
+    points.push({
+      x: startX + along,
+      y: cornerY,
+      angle: nearCorner && index > 0 ? 45 : 0,
+    });
+  }
+
+  return points;
+}
+
+function ChevronGlyph() {
+  return (
+    <svg width="42" height="42" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path
+        d="M7 5.5 13.5 11 7 16.5"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="butt"
+        strokeLinejoin="miter"
+      />
+    </svg>
+  );
+}
 
 function isUuid(value: string | null): value is string {
   return Boolean(
@@ -89,7 +146,11 @@ export default function DemoExperience() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [chevronPoints, setChevronPoints] = useState<ChevronPoint[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const trailRef = useRef<HTMLDivElement>(null);
+  const copyRef = useRef<HTMLDivElement>(null);
+  const inviteRef = useRef<HTMLSpanElement>(null);
   const transcriptRef = useRef<DemoView["transcript"]>([]);
   const viewRef = useRef<DemoView | null>(null);
 
@@ -112,6 +173,88 @@ export default function DemoExperience() {
     ? text.heroAccent
     : text.heroAccent.slice(0, Math.max(0, typed - text.heroLead.length));
   const stillTyping = !launcherVisible && typed > 0 && typed < heroPhrase.length;
+  const showInvite = launcherVisible && !open;
+
+  useEffect(() => {
+    if (!showInvite) {
+      setChevronPoints([]);
+      return;
+    }
+
+    let cancelled = false;
+    let frame = 0;
+    let observer: ResizeObserver | null = null;
+
+    const syncPath = () => {
+      const trail = trailRef.current;
+      const copy = copyRef.current;
+      const invite = inviteRef.current;
+      if (!trail || !copy || !invite || cancelled) return;
+
+      const trailRect = trail.getBoundingClientRect();
+      const inviteRect = invite.getBoundingClientRect();
+      // Same gutter as .copy via CSS for vertical chevrons; JS only needs the pixel value for the L bend.
+      const startX = Math.max(0, inviteRect.left - trailRect.left);
+      const startY = Math.max(
+        CHEVRON_GAP_BELOW_INVITE,
+        inviteRect.bottom - trailRect.top + CHEVRON_GAP_BELOW_INVITE,
+      );
+
+      setChevronPoints((prev) => {
+        const next = buildChevronPath({
+          width: trailRect.width,
+          height: trailRect.height,
+          startX,
+          startY,
+        });
+        if (
+          prev.length === next.length &&
+          prev.every((point, index) => {
+            const other = next[index];
+            return (
+              other &&
+              Math.abs(point.x - other.x) < 0.5 &&
+              Math.abs(point.y - other.y) < 0.5 &&
+              point.angle === other.angle
+            );
+          })
+        ) {
+          return prev;
+        }
+        return next;
+      });
+    };
+
+    const scheduleSync = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(syncPath);
+    };
+
+    scheduleSync();
+    observer = new ResizeObserver(scheduleSync);
+    observer.observe(trailRef.current ?? document.body);
+    if (copyRef.current) observer.observe(copyRef.current);
+    if (inviteRef.current) observer.observe(inviteRef.current);
+    observer.observe(document.documentElement);
+
+    window.addEventListener("resize", scheduleSync);
+    window.addEventListener("orientationchange", scheduleSync);
+    window.visualViewport?.addEventListener("resize", scheduleSync);
+    window.visualViewport?.addEventListener("scroll", scheduleSync);
+    void document.fonts?.ready.then(() => {
+      if (!cancelled) scheduleSync();
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener("resize", scheduleSync);
+      window.removeEventListener("orientationchange", scheduleSync);
+      window.visualViewport?.removeEventListener("resize", scheduleSync);
+      window.visualViewport?.removeEventListener("scroll", scheduleSync);
+    };
+  }, [showInvite]);
 
   useEffect(() => {
     const previousBody = document.body.style.backgroundColor;
@@ -315,6 +458,10 @@ export default function DemoExperience() {
       await run({ action: "question", sessionId: view.sessionId, questionId: id });
       return;
     }
+    if (view.phase === "awaiting_company_size") {
+      await run({ action: "company_size", sessionId: view.sessionId, companySize: id });
+      return;
+    }
     if (view.phase === "awaiting_price") {
       await run({ action: "price", sessionId: view.sessionId, priceBand: id });
       return;
@@ -367,8 +514,8 @@ export default function DemoExperience() {
 
   return (
     <main className={styles.root}>
-      <div className={styles.copy}>
-        <h1 className={styles.title} aria-label={`${text.heroLead.trim()} ${text.heroAccent}`}>
+      <div ref={copyRef} className={styles.copy}>
+        <h1 className={styles.title} aria-label={`${text.heroLead.trim()} ${text.heroAccent}. ${text.heroInvite}`}>
           {typed > 0 && (
             <span>
               {shownLead}
@@ -379,6 +526,11 @@ export default function DemoExperience() {
             <span>
               <span className={styles.accent}>{shownAccent}</span>
               {stillTyping && <i className={styles.caret} aria-hidden="true" />}
+            </span>
+          )}
+          {showInvite && (
+            <span ref={inviteRef} className={`${styles.invite} ${styles.reveal}`}>
+              {text.heroInvite}
             </span>
           )}
         </h1>
@@ -516,8 +668,39 @@ export default function DemoExperience() {
         </section>
       )}
 
+      {showInvite && (
+        <div ref={trailRef} className={styles.trail}>
+          <button
+            type="button"
+            className={styles.chevrons}
+            onClick={() => void openChat()}
+            aria-label={text.heroInvite}
+          >
+            {chevronPoints.map((point, index) => {
+              const isDown = point.angle === 90;
+              return (
+                <span
+                  key={`${Math.round(point.x)}-${Math.round(point.y)}-${index}`}
+                  className={`${styles.chevron} ${isDown ? styles.chevronDown : ""}`}
+                  style={{
+                    // Vertical column locked to --demo-gutter (same as the hero text).
+                    left: isDown ? undefined : `${point.x}px`,
+                    top: `${point.y}px`,
+                    ...(isDown ? {} : { ["--chevron-rotate" as string]: `${point.angle}deg` }),
+                    animationDelay: `${0.08 + index * 0.06}s`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronGlyph />
+                </span>
+              );
+            })}
+          </button>
+        </div>
+      )}
+
       {launcherVisible && (
-      <div className={`${styles.reveal} fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7`}>
+        <div className={`${styles.reveal} fixed bottom-5 right-4 z-50 sm:bottom-7 sm:right-7`}>
           <div className={styles.launcher}>
             {!open && (
               <>
